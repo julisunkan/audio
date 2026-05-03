@@ -1,5 +1,4 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "Q8lQlzeUKh7pQcDRNK4u7"
@@ -54,3 +53,9 @@ id = "Jnr_vvFp7oLt4UbPSlGvT"
 uri = "file://static/finder/icon-maskable.png"
 type = "image"
 title = "KDP finder maskable icon"
+
+[[outputs]]
+id = "-4OSamSjafhKnY0NtXdcB"
+uri = "file://microsoft-store-listing.txt"
+type = "text"
+title = "Microsoft Store Listing — Texts to Audiobooks Creator"

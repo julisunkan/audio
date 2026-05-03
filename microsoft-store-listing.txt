@@ -1,0 +1,212 @@
+================================================================
+MICROSOFT STORE LISTING — TEXTS TO AUDIOBOOKS CREATOR
+================================================================
+
+----------------------------------------------------------------
+SHORT DESCRIPTION (max 200 characters)
+----------------------------------------------------------------
+Turn any text, article, PDF, or Word document into a
+professional-quality audiobook in minutes — free, fast, and
+powered by AI.
+
+----------------------------------------------------------------
+FULL DESCRIPTION
+----------------------------------------------------------------
+
+Transform the way you consume written content. Texts to
+Audiobooks Creator converts your text, documents, and stories
+into high-quality audiobooks with natural-sounding narration —
+right in your browser, with no software to install.
+
+Whether you're a student juggling lecture notes, a professional
+plowing through industry reports, a writer proofreading your
+own work, or simply someone who prefers listening over reading,
+Texts to Audiobooks Creator puts a personal narrator at your
+fingertips.
+
+
+── PASTE TEXT OR UPLOAD A FILE ──────────────────────────────
+
+Drop in anything you want to hear:
+  • Paste text directly into the editor
+  • Upload a .TXT file for plain-text documents
+  • Upload a .PDF for academic papers, eBooks, or reports
+  • Upload a .DOCX for Word documents and manuscripts
+
+The app extracts and prepares your content automatically —
+no copy-paste gymnastics required.
+
+
+── AI-POWERED TEXT CLEANING ─────────────────────────────────
+
+Before narration begins, optional AI text cleaning (powered by
+Groq's Llama 3.3 model) tidies up your content for natural
+speech: removing page numbers, cleaning up headers, fixing
+punctuation, and smoothing transitions. The result is narration
+that flows like a real audiobook — not a machine reading a
+messy document.
+
+Choose from three narration styles:
+  • Storytelling — warm, narrative flow for fiction & essays
+  • News — crisp, professional delivery for articles & reports
+  • Calm — slow, smooth pacing for meditation & wellness content
+
+
+── 10 DISTINCT VOICE ACCENTS ────────────────────────────────
+
+Pick the voice that fits your content from 10 curated English
+accents across four regions:
+
+  US Voices    — Emma, Guy, Aria, Davis, Jenny
+  UK Voices    — Sonia, Ryan
+  Australian   — Natasha, William
+  Canadian     — Clara
+
+Preview any voice with a live sample before you commit.
+
+
+── SMART CHAPTER DETECTION ──────────────────────────────────
+
+Long documents are automatically split into chapters. The
+built-in chapter navigator lets you jump to any section of your
+audiobook instantly — just like a real audiobook player.
+
+
+── PLAYBACK SPEED CONTROL ───────────────────────────────────
+
+Dial in the perfect listening pace. Adjust narration speed from
+0.75× (slow and deliberate) up to 1.5× (rapid review mode).
+A live duration estimate updates as you type so you always know
+how long your audiobook will be before you generate it.
+
+
+── YOUR PERSONAL AUDIOBOOK LIBRARY ──────────────────────────
+
+Every audiobook you create is saved to your personal dashboard.
+Browse, search, and filter your entire collection by title,
+status, or voice. Pick up right where you left off, re-download
+any file, or delete projects you no longer need — all from one
+clean, organized view.
+
+
+── DOWNLOAD & KEEP FOREVER ──────────────────────────────────
+
+Every finished audiobook is exported as a standard 64 kbps MP3
+file. Download it to your device and listen anywhere — in your
+car, on your commute, at the gym — completely offline. Batch
+export your entire library as a ZIP file with one click.
+
+
+── INSTALLABLE PROGRESSIVE WEB APP (PWA) ────────────────────
+
+Texts to Audiobooks Creator is a full Progressive Web App. Pin
+it to your Start menu or taskbar directly from Microsoft Edge
+for a native app experience — complete with its own window,
+icon, and offline support. No app store download required;
+your browser handles the installation.
+
+
+── WHO IS THIS FOR? ─────────────────────────────────────────
+
+  Students           — Convert lecture notes and textbooks into
+                       audio you can study on the go.
+
+  Professionals      — Listen to reports, white papers, and
+                       emails during your commute.
+
+  Authors & Writers  — Proofread your own work by ear and catch
+                       errors your eyes miss.
+
+  Accessibility      — Make written content accessible to those
+                       with dyslexia, visual impairments, or
+                       reading difficulties.
+
+  Language Learners  — Hear correct pronunciation and cadence
+                       for texts in English.
+
+  Busy Parents       — Turn bedtime stories and children's books
+                       into audio with a tap.
+
+
+── PRIVACY FIRST ────────────────────────────────────────────
+
+Your documents are processed to generate audio and are never
+stored permanently on our servers. Uploaded files are deleted
+immediately after text extraction. You own your content.
+
+
+── SYSTEM REQUIREMENTS ──────────────────────────────────────
+
+  • Windows 10 or later
+  • Microsoft Edge, Chrome, or any modern browser
+  • Internet connection required for audiobook generation
+  • No additional software, plugins, or accounts needed
+
+
+----------------------------------------------------------------
+WHAT'S NEW (Version notes for store changelog)
+----------------------------------------------------------------
+
+• 10 curated English voice accents across US, UK, AU, and CA
+• AI text cleaning for natural narration flow
+• Smart chapter detection with in-player chapter navigator
+• Adjustable playback speed (0.75× – 1.5×)
+• Personal audiobook library with search and filters
+• Batch ZIP export of your entire library
+• Full PWA support — install to Start menu via Microsoft Edge
+• Offline fallback page with automatic reconnect detection
+• Secure admin panel for API key management
+• Background generation with real-time progress tracking
+
+
+----------------------------------------------------------------
+KEYWORDS / SEARCH TAGS
+----------------------------------------------------------------
+
+text to speech, text to audio, audiobook creator, audiobook
+maker, TTS, PDF to audio, document to audiobook, PDF reader,
+Word to audio, DOCX to MP3, speech synthesis, read aloud,
+AI narrator, AI voice, voice generator, narration tool,
+audiobook generator, text reader, listen to documents,
+convert text to MP3, MP3 download, ebook to audiobook,
+study tool, accessibility tool, screen reader alternative,
+dyslexia tool, productivity app, note to audio, article reader,
+podcast creator, voice accent, British voice, Australian voice,
+American voice, Canadian voice, natural voice, neural TTS,
+Groq AI, Llama AI, AI text cleaning, chapter navigation,
+speed control, variable speed playback, offline app, PWA,
+progressive web app, installable web app, Edge PWA,
+Windows app, free audiobook maker, no signup required,
+personal audiobook library, batch export, ZIP download
+
+
+----------------------------------------------------------------
+CATEGORY SUGGESTIONS
+----------------------------------------------------------------
+
+Primary:    Productivity
+Secondary:  Education
+Tertiary:   Entertainment / Books & Reference
+
+
+----------------------------------------------------------------
+AGE RATING
+----------------------------------------------------------------
+
+Everyone (E) — no user-generated public content, no in-app
+purchases, no ads, no account required.
+
+
+----------------------------------------------------------------
+PUBLISHER NOTES
+----------------------------------------------------------------
+
+This app is a Progressive Web App hosted on the web and
+submitted to the Microsoft Store via the PWA Builder or Edge
+PWA submission workflow. It requires an active internet
+connection to generate audiobooks but works offline for
+navigation thanks to its service worker cache.
+
+================================================================
+END OF LISTING
+================================================================
