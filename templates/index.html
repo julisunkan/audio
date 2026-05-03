@@ -56,16 +56,6 @@
         {% endfor %}
       </div>
 
-      <hr class="divider"/>
-
-      <div class="card-title" style="font-size:.85rem; color: var(--muted); margin-bottom:10px;">📁 Upload Your Own Voice Sample (optional)</div>
-      <div id="voice-sample-form-wrap">
-        <form id="voice-sample-form" enctype="multipart/form-data" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          <input type="file" name="voice_sample" accept=".mp3,.wav,.ogg,.m4a" style="width:auto;flex:1;min-width:200px;"/>
-          <button type="submit" class="btn btn-secondary btn-sm">Upload Sample</button>
-        </form>
-        <p style="font-size:.75rem;color:var(--muted);margin-top:6px;">Voice cloning is a future feature. Your sample will be stored for future use.</p>
-      </div>
     </div>
 
     <!-- Step 3: Options -->
@@ -96,5 +86,15 @@
       🎙️ Create Audiobook
     </button>
   </form>
+
+  <!-- Voice sample upload lives OUTSIDE the main form to avoid nesting -->
+  <div class="card" style="margin-top:20px;">
+    <div class="card-title" style="font-size:.85rem; color: var(--muted); margin-bottom:10px;">📁 Upload Your Own Voice Sample (optional)</div>
+    <div id="voice-sample-form" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <input type="file" id="voice-sample-file" accept=".mp3,.wav,.ogg,.m4a" style="flex:1;min-width:200px;"/>
+      <button type="button" class="btn btn-secondary btn-sm" id="voice-sample-btn">Upload Sample</button>
+    </div>
+    <p style="font-size:.75rem;color:var(--muted);margin-top:6px;">Voice cloning is a future feature. Your sample will be stored for future use.</p>
+  </div>
 </div>
 {% endblock %}

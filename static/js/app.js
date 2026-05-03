@@ -269,23 +269,29 @@ function escHtml(str) {
 
 // ── Voice sample upload ────────────────────────────────────────
 function initVoiceSampleUpload() {
-  const form = document.getElementById("voice-sample-form");
-  if (!form) return;
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const fd = new FormData(form);
-    const btn = form.querySelector("button");
+  const btn = document.getElementById("voice-sample-btn");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    const fileInput = document.getElementById("voice-sample-file");
+    if (!fileInput || !fileInput.files[0]) {
+      notify("Please select an audio file first.", "warning");
+      return;
+    }
+    const fd = new FormData();
+    fd.append("voice_sample", fileInput.files[0]);
     btn.disabled = true;
+    btn.textContent = "Uploading…";
     try {
       const res = await fetch("/api/upload-voice", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       notify(data.message, "success");
-      form.reset();
+      fileInput.value = "";
     } catch (err) {
       notify("Upload failed: " + err.message, "error");
     } finally {
       btn.disabled = false;
+      btn.textContent = "Upload Sample";
     }
   });
 }
