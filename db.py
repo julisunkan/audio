@@ -15,7 +15,7 @@ def init_db():
     conn = get_db()
     c = conn.cursor()
 
-    # Projects table — each audiobook generation job
+    # Projects table
     c.execute("""CREATE TABLE IF NOT EXISTS projects (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -30,12 +30,11 @@ def init_db():
         chapters TEXT,
         created_at TEXT NOT NULL
     )""")
-    # Migrate: add chapters column if it doesn't exist yet
     existing = [r[1] for r in c.execute("PRAGMA table_info(projects)").fetchall()]
     if "chapters" not in existing:
         c.execute("ALTER TABLE projects ADD COLUMN chapters TEXT")
 
-    # Settings table — stores API keys and config
+    # Settings table
     c.execute("""CREATE TABLE IF NOT EXISTS settings (
         key TEXT PRIMARY KEY,
         value TEXT
@@ -47,6 +46,19 @@ def init_db():
         filename TEXT,
         original_name TEXT,
         created_at TEXT
+    )""")
+
+    # Content reports table
+    c.execute("""CREATE TABLE IF NOT EXISTS reports (
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        details TEXT DEFAULT '',
+        reporter_ip TEXT DEFAULT '',
+        status TEXT DEFAULT 'open',
+        reported_at TEXT NOT NULL,
+        resolved_at TEXT,
+        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     )""")
 
     conn.commit()
@@ -93,3 +105,72 @@ def get_recent_projects(limit=10, offset=0):
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+
+# ── Report helpers ──────────────────────────────────────────────────────────
+
+def create_report(report_id, project_id, reason, details, reporter_ip, reported_at):
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO reports (id, project_id, reason, details, reporter_ip, status, reported_at) "
+        "VALUES (?,?,?,?,?,'open',?)",
+        (report_id, project_id, reason, details, reporter_ip, reported_at)
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_reports(status=None):
+    conn = get_db()
+    if status:
+        rows = conn.execute(
+            "SELECT r.*, p.name as project_name, p.voice, p.status as project_status "
+            "FROM reports r LEFT JOIN projects p ON r.project_id = p.id "
+            "WHERE r.status=? ORDER BY r.reported_at DESC",
+            (status,)
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT r.*, p.name as project_name, p.voice, p.status as project_status "
+            "FROM reports r LEFT JOIN projects p ON r.project_id = p.id "
+            "ORDER BY r.reported_at DESC"
+        ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_open_report_count():
+    conn = get_db()
+    row = conn.execute("SELECT COUNT(*) as n FROM reports WHERE status='open'").fetchone()
+    conn.close()
+    return row["n"] if row else 0
+
+
+def resolve_report(report_id, resolved_at):
+    conn = get_db()
+    conn.execute(
+        "UPDATE reports SET status='resolved', resolved_at=? WHERE id=?",
+        (resolved_at, report_id)
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_report_count_for_project(project_id):
+    conn = get_db()
+    row = conn.execute(
+        "SELECT COUNT(*) as n FROM reports WHERE project_id=? AND status='open'",
+        (project_id,)
+    ).fetchone()
+    conn.close()
+    return row["n"] if row else 0
+
+
+def get_recent_reports_by_ip(reporter_ip, since_iso):
+    conn = get_db()
+    row = conn.execute(
+        "SELECT COUNT(*) as n FROM reports WHERE reporter_ip=? AND reported_at >= ?",
+        (reporter_ip, since_iso)
+    ).fetchone()
+    conn.close()
+    return row["n"] if row else 0

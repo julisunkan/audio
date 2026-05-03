@@ -17,7 +17,9 @@ import zipfile
 from flask import (Flask, render_template, request, jsonify,
                    send_file, redirect, url_for, abort, Response)
 
-from db import init_db, get_db, get_setting, set_setting, get_project, update_project, get_recent_projects
+from db import (init_db, get_db, get_setting, set_setting, get_project, update_project,
+                get_recent_projects, create_report, get_reports, get_open_report_count,
+                resolve_report, get_report_count_for_project, get_recent_reports_by_ip)
 from utils.parser import extract_text, detect_chapters, chunk_text
 from utils.groq_utils import clean_text, generate_preview_text
 from utils.tts import synthesize_chunk, synthesize_preview, VOICES
@@ -425,6 +427,95 @@ def stream(project_id):
     if not os.path.exists(path):
         abort(404)
     return send_file(path, mimetype="audio/mpeg", conditional=True)
+
+
+# ── Content Reports ────────────────────────────────────────────────────────
+
+REPORT_REASONS = [
+    "Inappropriate / offensive content",
+    "Copyrighted material",
+    "Spam or misleading",
+    "Privacy violation",
+    "Other",
+]
+
+@app.route("/api/project/<project_id>/report", methods=["POST"])
+def report_project(project_id):
+    project = get_project(project_id)
+    if not project:
+        return jsonify({"error": "Project not found"}), 404
+
+    data     = request.get_json(silent=True) or {}
+    reason   = data.get("reason", "").strip()
+    details  = data.get("details", "").strip()[:500]
+
+    if not reason or reason not in REPORT_REASONS:
+        return jsonify({"error": "Invalid reason"}), 400
+
+    # Rate-limit: max 5 reports per IP per hour
+    reporter_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
+    one_hour_ago = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
+    from datetime import timedelta
+    cutoff = (datetime.utcnow() - timedelta(hours=1)).isoformat()
+    recent = get_recent_reports_by_ip(reporter_ip, cutoff)
+    if recent >= 5:
+        return jsonify({"error": "Too many reports. Please try again later."}), 429
+
+    # Check for duplicate open report from same IP on same project
+    conn = get_db()
+    dup = conn.execute(
+        "SELECT id FROM reports WHERE project_id=? AND reporter_ip=? AND status='open'",
+        (project_id, reporter_ip)
+    ).fetchone()
+    conn.close()
+    if dup:
+        return jsonify({"error": "You have already reported this audiobook."}), 409
+
+    report_id   = str(uuid.uuid4())
+    reported_at = datetime.utcnow().isoformat()
+    create_report(report_id, project_id, reason, details, reporter_ip, reported_at)
+    return jsonify({"ok": True, "message": "Report submitted. Thank you — we will review it shortly."})
+
+
+@app.route("/api/reports", methods=["GET"])
+def api_get_reports():
+    if request.args.get("key") != "julisunkan":
+        abort(403)
+    status = request.args.get("status")
+    return jsonify(get_reports(status=status or None))
+
+
+@app.route("/api/report/<report_id>/resolve", methods=["POST"])
+def api_resolve_report(report_id):
+    if request.args.get("key") != "julisunkan":
+        abort(403)
+    resolve_report(report_id, datetime.utcnow().isoformat())
+    return jsonify({"ok": True})
+
+
+@app.route("/api/report/<report_id>/resolve-and-delete", methods=["POST"])
+def api_resolve_and_delete_report(report_id):
+    if request.args.get("key") != "julisunkan":
+        abort(403)
+    conn = get_db()
+    row = conn.execute("SELECT project_id FROM reports WHERE id=?", (report_id,)).fetchone()
+    conn.close()
+    if not row:
+        return jsonify({"error": "Report not found"}), 404
+    project_id = row["project_id"]
+    resolve_report(report_id, datetime.utcnow().isoformat())
+    # delete the project + file
+    project = get_project(project_id)
+    if project:
+        if project.get("output_file"):
+            path = os.path.join(OUTPUT_DIR, project["output_file"])
+            if os.path.exists(path):
+                os.remove(path)
+        conn = get_db()
+        conn.execute("DELETE FROM projects WHERE id=?", (project_id,))
+        conn.commit()
+        conn.close()
+    return jsonify({"ok": True})
 
 
 # ── Admin ──────────────────────────────────────────────────────────────────

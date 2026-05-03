@@ -71,13 +71,17 @@
           Your browser does not support the audio element.
         </audio>
       </div>
-      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;align-items:center;">
         <a href="/download/{{ project.id }}" class="btn btn-success">
           📥 Download MP3
         </a>
         <a href="/dashboard" class="btn btn-secondary">
           📚 Back to Library
         </a>
+        <button onclick="openReportModal()" class="btn btn-danger" style="margin-left:auto;"
+          title="Report this content to admin">
+          🚩 Report Content
+        </button>
       </div>
     </div>
   </div>
@@ -99,6 +103,171 @@
 <span style="color:#60a5fa;font-size:.8rem;">[ {{ project.text|length }} characters total ]</span>{% endif %}</div>
   </div>
 </div>
+
+<!-- Report Modal -->
+<div id="report-modal" style="display:none;position:fixed;inset:0;z-index:9999;
+     background:rgba(7,13,26,.82);backdrop-filter:blur(6px);
+     align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--surface);border:1px solid rgba(239,68,68,.35);border-radius:18px;
+       box-shadow:0 0 48px rgba(239,68,68,.18),0 20px 60px rgba(0,0,0,.6);
+       width:100%;max-width:480px;padding:28px 28px 24px;position:relative;animation:fadeUp .25s ease;">
+    <!-- close -->
+    <button onclick="closeReportModal()" style="position:absolute;top:16px;right:16px;
+      background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+      color:var(--muted);font-size:1.1rem;width:32px;height:32px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;transition:color .2s,background .2s;"
+      onmouseover="this.style.color='var(--text)';this.style.background='var(--surface3)'"
+      onmouseout="this.style.color='var(--muted)';this.style.background='var(--surface2)'"
+      title="Close">✕</button>
+
+    <div style="font-size:2rem;margin-bottom:10px;">🚩</div>
+    <h2 style="font-size:1.2rem;font-weight:800;color:var(--text);margin:0 0 6px;">Report Content</h2>
+    <p style="font-size:.85rem;color:var(--muted);margin:0 0 20px;line-height:1.6;">
+      Something wrong with this audiobook? Let us know and our admin team will review it promptly.
+    </p>
+
+    <div id="report-form">
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:8px;">
+          Reason <span style="color:#ef4444;">*</span>
+        </label>
+        <div style="display:flex;flex-direction:column;gap:8px;" id="reason-options">
+          {% for r in ["Inappropriate / offensive content", "Copyrighted material", "Spam or misleading", "Privacy violation", "Other"] %}
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;
+            background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+            padding:10px 14px;transition:border-color .15s,background .15s;"
+            onmouseover="this.style.borderColor='rgba(239,68,68,.4)';this.style.background='rgba(239,68,68,.05)'"
+            onmouseout="if(!this.querySelector('input').checked){this.style.borderColor='var(--border)';this.style.background='var(--surface2)'}">
+            <input type="radio" name="report-reason" value="{{ r }}"
+              style="accent-color:#ef4444;width:15px;height:15px;cursor:pointer;flex-shrink:0;"
+              onchange="highlightReason()"/>
+            <span style="font-size:.875rem;color:var(--text);">{{ r }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:20px;">
+        <label for="report-details" style="font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:8px;">
+          Additional Details <span style="color:var(--muted);font-weight:400;">(optional)</span>
+        </label>
+        <textarea id="report-details" rows="3" maxlength="500"
+          placeholder="Describe the issue briefly…"
+          style="width:100%;resize:vertical;min-height:72px;"></textarea>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:4px;text-align:right;">
+          <span id="details-count">0</span>/500
+        </div>
+      </div>
+
+      <div id="report-msg" style="display:none;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.875rem;font-weight:600;"></div>
+
+      <div style="display:flex;gap:10px;">
+        <button onclick="submitReport()" id="report-submit-btn" class="btn btn-danger" style="flex:1;">
+          🚩 Submit Report
+        </button>
+        <button onclick="closeReportModal()" class="btn btn-ghost" style="flex:0 0 auto;">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const PROJECT_ID = "{{ project.id }}";
+
+  window.openReportModal = function () {
+    const m = document.getElementById("report-modal");
+    m.style.display = "flex";
+    document.body.style.overflow = "hidden";
+    clearReportForm();
+  };
+
+  window.closeReportModal = function () {
+    document.getElementById("report-modal").style.display = "none";
+    document.body.style.overflow = "";
+  };
+
+  // Close on backdrop click
+  document.getElementById("report-modal").addEventListener("click", function (e) {
+    if (e.target === this) closeReportModal();
+  });
+
+  window.highlightReason = function () {
+    document.querySelectorAll("#reason-options label").forEach(lbl => {
+      const inp = lbl.querySelector("input");
+      lbl.style.borderColor = inp.checked ? "rgba(239,68,68,.55)" : "var(--border)";
+      lbl.style.background  = inp.checked ? "rgba(239,68,68,.09)" : "var(--surface2)";
+    });
+  };
+
+  // Character count
+  const detailsEl = document.getElementById("report-details");
+  const countEl   = document.getElementById("details-count");
+  detailsEl.addEventListener("input", () => { countEl.textContent = detailsEl.value.length; });
+
+  function clearReportForm () {
+    document.querySelectorAll("input[name='report-reason']").forEach(r => r.checked = false);
+    document.querySelectorAll("#reason-options label").forEach(lbl => {
+      lbl.style.borderColor = "var(--border)";
+      lbl.style.background  = "var(--surface2)";
+    });
+    detailsEl.value = "";
+    countEl.textContent = "0";
+    hideMsg();
+    const btn = document.getElementById("report-submit-btn");
+    btn.disabled = false;
+    btn.innerHTML = "🚩 Submit Report";
+  }
+
+  function showMsg(text, type) {
+    const el = document.getElementById("report-msg");
+    el.style.display = "block";
+    el.style.background = type === "success" ? "rgba(16,185,129,.12)" : "rgba(239,68,68,.12)";
+    el.style.border     = type === "success" ? "1px solid rgba(16,185,129,.35)" : "1px solid rgba(239,68,68,.35)";
+    el.style.color      = type === "success" ? "#34d399" : "#f87171";
+    el.textContent      = text;
+  }
+
+  function hideMsg () {
+    document.getElementById("report-msg").style.display = "none";
+  }
+
+  window.submitReport = async function () {
+    const reason = (document.querySelector("input[name='report-reason']:checked") || {}).value || "";
+    if (!reason) { showMsg("Please select a reason.", "error"); return; }
+
+    const details = detailsEl.value.trim();
+    const btn     = document.getElementById("report-submit-btn");
+    btn.disabled  = true;
+    btn.innerHTML = "Submitting…";
+    hideMsg();
+
+    try {
+      const res  = await fetch(`/api/project/${PROJECT_ID}/report`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ reason, details })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showMsg(data.error || "Submission failed. Please try again.", "error");
+        btn.disabled  = false;
+        btn.innerHTML = "🚩 Submit Report";
+        return;
+      }
+      showMsg("✅ " + data.message, "success");
+      btn.innerHTML = "✅ Reported";
+      setTimeout(closeReportModal, 2200);
+    } catch {
+      showMsg("Network error. Please try again.", "error");
+      btn.disabled  = false;
+      btn.innerHTML = "🚩 Submit Report";
+    }
+  };
+})();
+</script>
 
 {% if project.chapters %}
 <script>

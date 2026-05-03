@@ -127,6 +127,31 @@
       <div style="text-align:center;padding:20px;color:var(--muted);"><span class="spinner"></span> Loading…</div>
     </div>
   </div>
+
+  <!-- ── Content Reports ─────────────────────────────── -->
+  <div class="card" style="max-width:100%;border-color:rgba(239,68,68,.25);">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="card-title" style="margin-bottom:0;">🚩 Content Reports</div>
+        <span id="report-open-badge" style="display:none;background:rgba(239,68,68,.18);color:#f87171;
+          border:1px solid rgba(239,68,68,.35);border-radius:20px;font-size:.72rem;font-weight:700;
+          padding:2px 10px;">0 open</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="report-filter" onchange="loadReports()"
+          style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+          color:var(--text);font-size:.8rem;padding:6px 10px;cursor:pointer;">
+          <option value="open">Open</option>
+          <option value="resolved">Resolved</option>
+          <option value="">All</option>
+        </select>
+        <button onclick="loadReports()" class="btn btn-sm btn-ghost" title="Refresh">🔄 Refresh</button>
+      </div>
+    </div>
+    <div id="report-list">
+      <div style="text-align:center;padding:20px;color:var(--muted);"><span class="spinner"></span> Loading…</div>
+    </div>
+  </div>
 </div>
 
 <style>
@@ -134,6 +159,11 @@
 .ab-row:last-child { border-bottom:none; }
 .ab-row.selected { background:rgba(239,68,68,.07);border-radius:8px; }
 .ab-row input[type=checkbox] { width:15px;height:15px;accent-color:#ef4444;cursor:pointer;flex-shrink:0; }
+.rpt-row { border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;
+  background:var(--surface2);transition:border-color .15s; }
+.rpt-row:last-child { margin-bottom:0; }
+.rpt-row:hover { border-color:rgba(239,68,68,.3); }
+.rpt-row.resolved { opacity:.55; }
 </style>
 
 <script>
@@ -327,6 +357,133 @@
   };
 
   loadAll();
+})();
+</script>
+
+<script>
+/* ── Reports section ────────────────────────────────────────────────────── */
+(function () {
+  const ADMIN_KEY  = "{{ admin_key }}";
+  const listEl     = document.getElementById("report-list");
+  const badge      = document.getElementById("report-open-badge");
+
+  function escH(s) {
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return "";
+    return iso.replace("T", " ").substring(0, 16);
+  }
+
+  function reasonColor(reason) {
+    if (reason.includes("Inappropriate") || reason.includes("offensive")) return "#f87171";
+    if (reason.includes("Copyright")) return "#fbbf24";
+    if (reason.includes("Spam"))      return "#a78bfa";
+    if (reason.includes("Privacy"))   return "#60a5fa";
+    return "var(--muted)";
+  }
+
+  window.loadReports = async function () {
+    const filter = document.getElementById("report-filter").value;
+    listEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);"><span class="spinner"></span> Loading…</div>`;
+    try {
+      const res  = await fetch(`/api/reports?key=${ADMIN_KEY}${filter ? "&status=" + filter : ""}`);
+      const data = await res.json();
+
+      // Update open badge
+      const openCount = data.filter(r => r.status === "open").length;
+      if (filter === "open" || filter === "") {
+        badge.style.display = openCount > 0 ? "inline-block" : "none";
+        badge.textContent   = `${openCount} open`;
+      }
+
+      if (!data.length) {
+        listEl.innerHTML = `<div style="text-align:center;padding:24px;color:var(--muted);">No reports found.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = data.map(r => `
+        <div class="rpt-row${r.status === "resolved" ? " resolved" : ""}" data-report-id="${r.id}">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+                <span style="font-weight:700;color:${reasonColor(r.reason)};font-size:.85rem;">
+                  🚩 ${escH(r.reason)}
+                </span>
+                <span style="font-size:.7rem;color:var(--muted);background:var(--surface);
+                  border:1px solid var(--border);border-radius:6px;padding:1px 7px;">
+                  ${r.status === "open" ? "🔴 Open" : "✅ Resolved"}
+                </span>
+              </div>
+              <div style="font-size:.82rem;color:var(--text);font-weight:600;margin-bottom:3px;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+                title="${escH(r.project_name || r.project_id)}">
+                📚 ${escH(r.project_name || r.project_id)}
+                ${r.project_status ? `<span style="font-size:.7rem;color:var(--muted);font-weight:400;">(${r.project_status})</span>` : ""}
+              </div>
+              ${r.details ? `<div style="font-size:.8rem;color:var(--muted);margin-bottom:4px;font-style:italic;">"${escH(r.details)}"</div>` : ""}
+              <div style="font-size:.72rem;color:var(--muted);">
+                Reported: ${fmtDate(r.reported_at)}
+                ${r.reporter_ip ? ` &bull; IP: ${escH(r.reporter_ip)}` : ""}
+                ${r.resolved_at ? ` &bull; Resolved: ${fmtDate(r.resolved_at)}` : ""}
+              </div>
+            </div>
+            ${r.status === "open" ? `
+            <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+              <a href="/listen/${r.project_id}" target="_blank"
+                class="btn btn-sm btn-secondary" style="font-size:.72rem;padding:5px 10px;text-align:center;">
+                ▶ Preview
+              </a>
+              <button onclick="resolveAndDelete('${r.id}', this)"
+                class="btn btn-sm btn-danger" style="font-size:.72rem;padding:5px 10px;">
+                🗑 Delete Content
+              </button>
+              <button onclick="dismissReport('${r.id}', this)"
+                class="btn btn-sm btn-ghost" style="font-size:.72rem;padding:5px 10px;">
+                ✓ Dismiss
+              </button>
+            </div>` : ""}
+          </div>
+        </div>`).join("");
+    } catch (e) {
+      listEl.innerHTML = `<div style="color:#f87171;padding:16px;">Failed to load reports.</div>`;
+    }
+  };
+
+  window.dismissReport = async function (id, btn) {
+    btn.disabled    = true;
+    btn.textContent = "…";
+    try {
+      const res = await fetch(`/api/report/${id}/resolve?key=${ADMIN_KEY}`, { method: "POST" });
+      if (!res.ok) throw new Error();
+      notify("Report dismissed.", "success");
+      loadReports();
+    } catch {
+      notify("Failed to dismiss report.", "error");
+      btn.disabled    = false;
+      btn.textContent = "✓ Dismiss";
+    }
+  };
+
+  window.resolveAndDelete = async function (id, btn) {
+    if (!confirm("Delete the reported audiobook and mark this report as resolved? This cannot be undone.")) return;
+    btn.disabled    = true;
+    btn.textContent = "Deleting…";
+    try {
+      const res = await fetch(`/api/report/${id}/resolve-and-delete?key=${ADMIN_KEY}`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+      notify("Audiobook deleted and report resolved.", "success");
+      loadReports();
+    } catch (e) {
+      notify(e.message, "error");
+      btn.disabled    = false;
+      btn.textContent = "🗑 Delete Content";
+    }
+  };
+
+  loadReports();
 })();
 </script>
 {% endblock %}
