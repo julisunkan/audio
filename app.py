@@ -4,9 +4,10 @@ app.py — Main Flask application for Texts to Audiobooks Creator.
 import os
 import uuid
 import hashlib
+import shutil
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 
 import io
@@ -18,12 +19,15 @@ from flask import (Flask, render_template, request, jsonify,
                    send_file, redirect, url_for, abort, Response)
 
 from db import (init_db, get_db, get_setting, set_setting, get_project, update_project,
-                get_recent_projects, create_report, get_reports, get_open_report_count,
-                resolve_report, get_report_count_for_project, get_recent_reports_by_ip)
+                get_recent_projects, create_report, get_reports,
+                resolve_report, get_recent_reports_by_ip)
 from utils.parser import extract_text, detect_chapters, chunk_text
 from utils.groq_utils import clean_text, generate_preview_text
 from utils.tts import synthesize_chunk, synthesize_preview, VOICES
 from utils.audio import merge_chunks
+
+# ── Admin key (defined early — used by dashboard route and report routes) ───
+ADMIN_KEY = "julisunkan"
 
 # ── App Setup ──────────────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -146,10 +150,10 @@ def _run_job(project_id: str):
         output_path = os.path.join(OUTPUT_DIR, output_filename)
         merge_chunks(chunk_files, output_path)
 
-        # Cleanup tmp dir
+        # Cleanup tmp dir (shutil.rmtree handles non-empty dirs safely)
         try:
-            os.rmdir(tmp_dir)
-        except OSError:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+        except Exception:
             pass
 
         # Store in cache
@@ -170,16 +174,29 @@ def _run_job(project_id: str):
 
 
 def _cleanup_old_files():
-    """Delete uploads and outputs older than 3 days."""
+    """Delete uploads and outputs (files + tmp dirs) older than 3 days."""
     cutoff = time.time() - (3 * 24 * 3600)
     for directory in [UPLOAD_DIR, OUTPUT_DIR]:
-        for fname in os.listdir(directory):
+        try:
+            entries = os.listdir(directory)
+        except OSError:
+            continue
+        for fname in entries:
             fpath = os.path.join(directory, fname)
-            if os.path.isfile(fpath) and os.path.getmtime(fpath) < cutoff:
+            try:
+                mtime = os.path.getmtime(fpath)
+            except OSError:
+                continue
+            if mtime >= cutoff:
+                continue
+            if os.path.isfile(fpath):
                 try:
                     os.remove(fpath)
                 except OSError:
                     pass
+            elif os.path.isdir(fpath) and fname.startswith("tmp_"):
+                # Orphaned chunk directories from crashed jobs
+                shutil.rmtree(fpath, ignore_errors=True)
 
 
 # Run cleanup once at startup (non-blocking)
@@ -454,8 +471,6 @@ def report_project(project_id):
 
     # Rate-limit: max 5 reports per IP per hour
     reporter_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
-    one_hour_ago = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
-    from datetime import timedelta
     cutoff = (datetime.utcnow() - timedelta(hours=1)).isoformat()
     recent = get_recent_reports_by_ip(reporter_ip, cutoff)
     if recent >= 5:
@@ -479,7 +494,7 @@ def report_project(project_id):
 
 @app.route("/api/reports", methods=["GET"])
 def api_get_reports():
-    if request.args.get("key") != "julisunkan":
+    if request.args.get("key") != ADMIN_KEY:
         abort(403)
     status = request.args.get("status")
     return jsonify(get_reports(status=status or None))
@@ -487,7 +502,7 @@ def api_get_reports():
 
 @app.route("/api/report/<report_id>/resolve", methods=["POST"])
 def api_resolve_report(report_id):
-    if request.args.get("key") != "julisunkan":
+    if request.args.get("key") != ADMIN_KEY:
         abort(403)
     resolve_report(report_id, datetime.utcnow().isoformat())
     return jsonify({"ok": True})
@@ -495,7 +510,7 @@ def api_resolve_report(report_id):
 
 @app.route("/api/report/<report_id>/resolve-and-delete", methods=["POST"])
 def api_resolve_and_delete_report(report_id):
-    if request.args.get("key") != "julisunkan":
+    if request.args.get("key") != ADMIN_KEY:
         abort(403)
     conn = get_db()
     row = conn.execute("SELECT project_id FROM reports WHERE id=?", (report_id,)).fetchone()
@@ -519,8 +534,6 @@ def api_resolve_and_delete_report(report_id):
 
 
 # ── Admin ──────────────────────────────────────────────────────────────────
-
-ADMIN_KEY = "julisunkan"
 
 @app.route("/julisunkan", methods=["GET", "POST"])
 def admin():

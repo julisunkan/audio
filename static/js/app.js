@@ -229,6 +229,8 @@ function initProjectPoll(projectId) {
       }
 
       if (data.status === "completed") {
+        const progressSection = document.getElementById("progress-section");
+        if (progressSection) progressSection.style.display = "none";
         if (playerSection) {
           playerSection.style.display = "block";
           const audioEl = playerSection.querySelector("audio");
@@ -238,9 +240,12 @@ function initProjectPoll(projectId) {
         }
         return; // Stop polling
       } else if (data.status === "failed") {
+        const progressSection = document.getElementById("progress-section");
+        if (progressSection) progressSection.style.display = "none";
         if (errorSection) {
           errorSection.style.display = "block";
-          errorSection.querySelector(".error-msg").textContent = data.error_msg || "Unknown error";
+          const msgEl = errorSection.querySelector(".error-msg");
+          if (msgEl) msgEl.textContent = data.error_msg || "Unknown error";
         }
         return;
       }
