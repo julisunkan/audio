@@ -57,4 +57,253 @@
     <a href="/" class="btn btn-cta btn-lg">✨ Create New Audiobook</a>
   </div>
 </div>
+
+<!-- ── Report Modal (dashboard) ─────────────────────────────────────── -->
+<div id="dash-report-modal" style="display:none;position:fixed;inset:0;z-index:9999;
+     background:rgba(7,13,26,.85);backdrop-filter:blur(8px);
+     align-items:center;justify-content:center;padding:12px;">
+
+  <div style="background:var(--surface);border:1px solid rgba(239,68,68,.3);border-radius:20px;
+       box-shadow:0 0 60px rgba(239,68,68,.15),0 24px 64px rgba(0,0,0,.7);
+       width:100%;max-width:560px;position:relative;overflow:hidden;">
+
+    <!-- Animated top bar -->
+    <div style="height:4px;background:linear-gradient(90deg,#ef4444,#f97316,#ef4444);background-size:200%;
+         animation:shimmer 2s linear infinite;"></div>
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:1.5rem;line-height:1;">🚩</span>
+        <div>
+          <div style="font-size:1rem;font-weight:800;color:var(--text);line-height:1.2;">Report Content</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:2px;" id="dash-report-subtitle">
+            Help us keep content safe and lawful
+          </div>
+        </div>
+      </div>
+      <button onclick="closeDashboardReport()"
+        style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+        color:var(--muted);font-size:.9rem;width:30px;height:30px;cursor:pointer;flex-shrink:0;
+        display:flex;align-items:center;justify-content:center;transition:all .2s;"
+        onmouseover="this.style.background='rgba(239,68,68,.15)';this.style.borderColor='rgba(239,68,68,.4)';this.style.color='#f87171'"
+        onmouseout="this.style.background='var(--surface2)';this.style.borderColor='var(--border)';this.style.color='var(--muted)'"
+        title="Close">✕</button>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:0 22px 22px;">
+
+      <!-- Reason pills 2-column grid -->
+      <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+           letter-spacing:.08em;margin-bottom:8px;">
+        Select a reason <span style="color:#ef4444;">*</span>
+      </div>
+      <div id="dash-reason-options" style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px;">
+        <label class="dash-reason-pill" data-val="Inappropriate / offensive content"
+          style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface2);
+          border:1px solid var(--border);border-radius:10px;padding:9px 12px;transition:all .15s;user-select:none;">
+          <input type="radio" name="dash-report-reason" value="Inappropriate / offensive content"
+            style="position:absolute;opacity:0;pointer-events:none;" onchange="pickDashReason(this)"/>
+          <span style="font-size:1rem;flex-shrink:0;">🔞</span>
+          <span style="font-size:.82rem;color:var(--text);line-height:1.3;font-weight:500;">Inappropriate / offensive content</span>
+        </label>
+        <label class="dash-reason-pill" data-val="Copyrighted material"
+          style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface2);
+          border:1px solid var(--border);border-radius:10px;padding:9px 12px;transition:all .15s;user-select:none;">
+          <input type="radio" name="dash-report-reason" value="Copyrighted material"
+            style="position:absolute;opacity:0;pointer-events:none;" onchange="pickDashReason(this)"/>
+          <span style="font-size:1rem;flex-shrink:0;">©️</span>
+          <span style="font-size:.82rem;color:var(--text);line-height:1.3;font-weight:500;">Copyrighted material</span>
+        </label>
+        <label class="dash-reason-pill" data-val="Spam or misleading"
+          style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface2);
+          border:1px solid var(--border);border-radius:10px;padding:9px 12px;transition:all .15s;user-select:none;">
+          <input type="radio" name="dash-report-reason" value="Spam or misleading"
+            style="position:absolute;opacity:0;pointer-events:none;" onchange="pickDashReason(this)"/>
+          <span style="font-size:1rem;flex-shrink:0;">⚠️</span>
+          <span style="font-size:.82rem;color:var(--text);line-height:1.3;font-weight:500;">Spam or misleading</span>
+        </label>
+        <label class="dash-reason-pill" data-val="Privacy violation"
+          style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface2);
+          border:1px solid var(--border);border-radius:10px;padding:9px 12px;transition:all .15s;user-select:none;">
+          <input type="radio" name="dash-report-reason" value="Privacy violation"
+            style="position:absolute;opacity:0;pointer-events:none;" onchange="pickDashReason(this)"/>
+          <span style="font-size:1rem;flex-shrink:0;">🔒</span>
+          <span style="font-size:.82rem;color:var(--text);line-height:1.3;font-weight:500;">Privacy violation</span>
+        </label>
+        <label class="dash-reason-pill" data-val="Other"
+          style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface2);
+          border:1px solid var(--border);border-radius:10px;padding:9px 12px;transition:all .15s;user-select:none;
+          grid-column:1/-1;">
+          <input type="radio" name="dash-report-reason" value="Other"
+            style="position:absolute;opacity:0;pointer-events:none;" onchange="pickDashReason(this)"/>
+          <span style="font-size:1rem;flex-shrink:0;">💬</span>
+          <span style="font-size:.82rem;color:var(--text);line-height:1.3;font-weight:500;">Other</span>
+        </label>
+      </div>
+
+      <!-- Details + submit inline -->
+      <div style="display:flex;gap:10px;align-items:flex-start;">
+        <div style="flex:1;">
+          <textarea id="dash-report-details" rows="2" maxlength="500"
+            placeholder="Optional: add more context…"
+            style="width:100%;resize:none;min-height:58px;font-size:.82rem;"></textarea>
+          <div style="font-size:.68rem;color:var(--muted);margin-top:3px;text-align:right;">
+            <span id="dash-details-count">0</span>/500
+          </div>
+        </div>
+        <button onclick="submitDashboardReport()" id="dash-report-submit-btn"
+          style="flex-shrink:0;height:58px;padding:0 20px;
+          background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;
+          border:none;border-radius:10px;font-size:.85rem;font-weight:700;
+          cursor:pointer;transition:all .2s;white-space:nowrap;
+          box-shadow:0 4px 16px rgba(239,68,68,.35);"
+          onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(239,68,68,.5)'"
+          onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(239,68,68,.35)'">
+          🚩 Submit
+        </button>
+      </div>
+
+      <!-- Status message -->
+      <div id="dash-report-msg" style="display:none;border-radius:10px;padding:10px 14px;
+           margin-top:12px;font-size:.85rem;font-weight:600;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  let _currentReportId = null;
+
+  /* ── open / close ─────────────────────────────────────── */
+  window.openDashboardReport = function (projectId) {
+    _currentReportId = projectId;
+    // Show the audiobook name in the subtitle
+    const card = document.querySelector(`.project-card[data-id="${projectId}"]`);
+    const name = card?.querySelector(".project-name")?.textContent || "";
+    const sub  = document.getElementById("dash-report-subtitle");
+    if (sub && name) sub.textContent = `Reporting: "${name}"`;
+    clearDashForm();
+    document.getElementById("dash-report-modal").style.display = "flex";
+    document.body.style.overflow = "hidden";
+  };
+
+  window.closeDashboardReport = function () {
+    document.getElementById("dash-report-modal").style.display = "none";
+    document.body.style.overflow = "";
+    _currentReportId = null;
+  };
+
+  document.getElementById("dash-report-modal").addEventListener("click", function (e) {
+    if (e.target === this) closeDashboardReport();
+  });
+
+  /* ── pill selection ───────────────────────────────────── */
+  function resetDashPills() {
+    document.querySelectorAll(".dash-reason-pill").forEach(lbl => {
+      lbl.style.borderColor = "var(--border)";
+      lbl.style.background  = "var(--surface2)";
+      lbl.style.boxShadow   = "none";
+      const txt = lbl.querySelector("span:last-child");
+      if (txt) txt.style.color = "var(--text)";
+    });
+  }
+
+  window.pickDashReason = function (inp) {
+    resetDashPills();
+    const lbl = inp.closest(".dash-reason-pill");
+    if (lbl) {
+      lbl.style.borderColor = "rgba(239,68,68,.6)";
+      lbl.style.background  = "rgba(239,68,68,.1)";
+      lbl.style.boxShadow   = "0 0 0 3px rgba(239,68,68,.15)";
+      const txt = lbl.querySelector("span:last-child");
+      if (txt) txt.style.color = "#fca5a5";
+    }
+  };
+
+  document.querySelectorAll(".dash-reason-pill").forEach(lbl => {
+    lbl.addEventListener("click", () => {
+      const inp = lbl.querySelector("input[type=radio]");
+      inp.checked = true;
+      pickDashReason(inp);
+    });
+  });
+
+  /* ── character count ──────────────────────────────────── */
+  const detailsEl = document.getElementById("dash-report-details");
+  const countEl   = document.getElementById("dash-details-count");
+  detailsEl.addEventListener("input", () => { countEl.textContent = detailsEl.value.length; });
+
+  /* ── helpers ──────────────────────────────────────────── */
+  function clearDashForm() {
+    document.querySelectorAll("input[name='dash-report-reason']").forEach(r => r.checked = false);
+    resetDashPills();
+    detailsEl.value     = "";
+    countEl.textContent = "0";
+    hideDashMsg();
+    const btn = document.getElementById("dash-report-submit-btn");
+    btn.disabled         = false;
+    btn.textContent      = "🚩 Submit";
+    btn.style.background = "linear-gradient(135deg,#ef4444,#dc2626)";
+  }
+
+  function showDashMsg(text, type) {
+    const el = document.getElementById("dash-report-msg");
+    el.style.display    = "block";
+    el.style.background = type === "success" ? "rgba(16,185,129,.12)" : "rgba(239,68,68,.12)";
+    el.style.border     = type === "success" ? "1px solid rgba(16,185,129,.35)" : "1px solid rgba(239,68,68,.35)";
+    el.style.color      = type === "success" ? "#34d399" : "#f87171";
+    el.textContent      = text;
+  }
+
+  function hideDashMsg() {
+    document.getElementById("dash-report-msg").style.display = "none";
+  }
+
+  /* ── submit ───────────────────────────────────────────── */
+  window.submitDashboardReport = async function () {
+    const checked = document.querySelector("input[name='dash-report-reason']:checked");
+    if (!checked) {
+      showDashMsg("⚠️ Please select a reason first.", "error");
+      return;
+    }
+    if (!_currentReportId) return;
+
+    const reason  = checked.value;
+    const details = detailsEl.value.trim();
+    const btn     = document.getElementById("dash-report-submit-btn");
+
+    btn.disabled         = true;
+    btn.textContent      = "Sending…";
+    btn.style.background = "rgba(239,68,68,.4)";
+    hideDashMsg();
+
+    try {
+      const res  = await fetch(`/api/project/${_currentReportId}/report`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ reason, details })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showDashMsg(data.error || "Submission failed. Please try again.", "error");
+        btn.disabled         = false;
+        btn.textContent      = "🚩 Submit";
+        btn.style.background = "linear-gradient(135deg,#ef4444,#dc2626)";
+        return;
+      }
+      showDashMsg("✅ " + data.message, "success");
+      btn.textContent      = "✅ Sent";
+      btn.style.background = "linear-gradient(135deg,#10b981,#059669)";
+      setTimeout(closeDashboardReport, 2400);
+    } catch {
+      showDashMsg("Network error. Please try again.", "error");
+      btn.disabled         = false;
+      btn.textContent      = "🚩 Submit";
+      btn.style.background = "linear-gradient(135deg,#ef4444,#dc2626)";
+    }
+  };
+})();
+</script>
 {% endblock %}

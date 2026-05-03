@@ -420,6 +420,9 @@ function initDashboard() {
            onclick="deleteProject('${p.id}', this)" title="Delete project">🗑</button>`
       : "";
 
+    const reportBtn = `<button class="btn btn-sm" style="background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25);"
+         onclick="openDashboardReport('${p.id}')" title="Report this content">🚩</button>`;
+
     return `<div class="project-card" data-id="${p.id}" data-status="${p.status}">
       <div>
         <div class="project-name">${escHtml(p.name)}</div>
@@ -431,6 +434,7 @@ function initDashboard() {
         ${actions}
         ${renameBtn}
         ${deleteBtn}
+        ${reportBtn}
       </div>
     </div>`;
   }
