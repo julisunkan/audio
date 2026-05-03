@@ -1,7 +1,7 @@
 {
   "id": "texts-to-audiobooks-creator",
   "name": "Texts to Audiobooks Creator",
-  "short_name": "AudioBooks",
+  "short_name": "Texts to Audiobooks",
   "description": "Convert any text or document into a professional audiobook with AI-powered narration",
   "start_url": "/",
   "display": "standalone",
