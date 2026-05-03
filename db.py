@@ -27,8 +27,13 @@ def init_db():
         progress INTEGER DEFAULT 0,
         output_file TEXT,
         error_msg TEXT,
+        chapters TEXT,
         created_at TEXT NOT NULL
     )""")
+    # Migrate: add chapters column if it doesn't exist yet
+    existing = [r[1] for r in c.execute("PRAGMA table_info(projects)").fetchall()]
+    if "chapters" not in existing:
+        c.execute("ALTER TABLE projects ADD COLUMN chapters TEXT")
 
     # Settings table — stores API keys and config
     c.execute("""CREATE TABLE IF NOT EXISTS settings (

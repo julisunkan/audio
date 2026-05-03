@@ -54,11 +54,78 @@
     </div>
   </div>
 
+  <!-- Chapter Breakdown -->
+  {% if project.chapters %}
+  {% set chapters = project.chapters | tojson | safe %}
+  <div class="card" id="chapter-panel">
+    <div class="card-title">📑 Chapters</div>
+    <div id="chapter-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+  </div>
+  {% endif %}
+
   <!-- Text Preview -->
   <div class="card">
     <div class="card-title">📄 Source Text Preview</div>
     <div style="background:var(--surface2);border-radius:8px;padding:16px;max-height:200px;overflow-y:auto;font-size:.875rem;line-height:1.7;color:var(--muted);white-space:pre-wrap;">{{ project.text[:1000] }}{% if project.text|length > 1000 %}…<br/><span style="color:var(--accent);font-size:.8rem;">[{{ project.text|length }} characters total]</span>{% endif %}</div>
   </div>
 </div>
+
+{% if project.chapters %}
+<script>
+(function () {
+  const chaptersData = {{ project.chapters | tojson }};
+  if (!chaptersData || chaptersData.length < 2) {
+    const panel = document.getElementById("chapter-panel");
+    if (panel) panel.style.display = "none";
+    return;
+  }
+
+  function fmtTime(s) {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = Math.floor(s % 60);
+    if (h > 0) return `${h}:${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
+    return `${m}:${String(sec).padStart(2,"0")}`;
+  }
+
+  const audio = document.querySelector("audio");
+  const listEl = document.getElementById("chapter-list");
+
+  function renderChapters(activeSec) {
+    listEl.innerHTML = "";
+    chaptersData.forEach((ch, idx) => {
+      const nextStart = idx + 1 < chaptersData.length ? chaptersData[idx + 1].start_s : Infinity;
+      const isActive = activeSec !== null && activeSec >= ch.start_s && activeSec < nextStart;
+      const row = document.createElement("button");
+      row.style.cssText = `display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+        padding:10px 14px;border-radius:8px;border:none;cursor:pointer;transition:background .15s;
+        background:${isActive ? "rgba(139,92,246,.18)" : "var(--surface2)"};
+        color:${isActive ? "var(--accent)" : "var(--text)"};`;
+      row.innerHTML = `
+        <span style="font-size:.75rem;font-variant-numeric:tabular-nums;min-width:38px;
+          color:${isActive ? "var(--accent)" : "var(--muted)"};">${fmtTime(ch.start_s)}</span>
+        <span style="flex:1;font-size:.9rem;font-weight:${isActive ? 600 : 400};">${ch.title}</span>
+        ${isActive ? '<span style="font-size:.7rem;color:var(--accent);white-space:nowrap;">▶ playing</span>' : ""}`;
+      row.addEventListener("click", () => {
+        if (audio) {
+          audio.currentTime = ch.start_s;
+          audio.play();
+        }
+        renderChapters(ch.start_s);
+      });
+      listEl.appendChild(row);
+    });
+  }
+
+  renderChapters(null);
+
+  if (audio) {
+    audio.addEventListener("timeupdate", () => {
+      renderChapters(audio.currentTime);
+    });
+  }
+})();
+</script>
+{% endif %}
 
 {% endblock %}

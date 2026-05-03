@@ -40,10 +40,11 @@ def _apply_speed(audio: AudioSegment, speed: float) -> AudioSegment:
     return sped.set_frame_rate(audio.frame_rate)
 
 
-def synthesize_chunk(text: str, voice_name: str, speed: float, output_path: str):
+def synthesize_chunk(text: str, voice_name: str, speed: float, output_path: str) -> int:
     """
     Generate speech for one text chunk and save as MP3.
     Applies speed adjustment via pydub after generation.
+    Returns the duration of the generated audio in milliseconds.
     """
     config = get_voice_config(voice_name)
     tts = gTTS(text=text, lang=config["lang"], tld=config["tld"])
@@ -58,6 +59,7 @@ def synthesize_chunk(text: str, voice_name: str, speed: float, output_path: str)
         audio = _apply_speed(audio, speed)
 
     audio.export(output_path, format="mp3", bitrate="64k")
+    return len(audio)  # pydub len() returns duration in milliseconds
 
 
 def synthesize_preview(voice_name: str, preview_text: str) -> bytes:

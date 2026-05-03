@@ -10,6 +10,8 @@ from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 
 import io
+import json
+import re
 import zipfile
 
 from flask import (Flask, render_template, request, jsonify,
@@ -73,23 +75,69 @@ def _run_job(project_id: str):
         cleaned = clean_text(text, style)
         update_project(project_id, progress=10)
 
-        # Chapter detection then chunking
-        chapters = detect_chapters(cleaned)
-        all_chunks = []
-        for chapter in chapters:
-            all_chunks.extend(chunk_text(chapter, max_chars=800))
+        # Chapter detection; fall back to paragraph-based sections
+        raw_chapters = detect_chapters(cleaned)
+        if len(raw_chapters) == 1 and len(cleaned) > 1500:
+            paragraphs = [p.strip() for p in re.split(r'\n\s*\n', cleaned.strip()) if p.strip()]
+            if len(paragraphs) > 2:
+                sections, current = [], ""
+                for para in paragraphs:
+                    if len(current) + len(para) < 1500 or not current:
+                        current = (current + "\n\n" + para).strip()
+                    else:
+                        sections.append(current)
+                        current = para
+                if current:
+                    sections.append(current)
+                if len(sections) > 1:
+                    raw_chapters = sections
 
+        # Build chapter → chunk map with friendly titles
+        chapter_map = []  # [(title, [chunk_text, ...], preview)]
+        for ch_idx, chapter in enumerate(raw_chapters):
+            first_line = chapter.strip().split('\n')[0][:80].strip()
+            if re.match(r'chapter\s+\w+', first_line, re.IGNORECASE):
+                title = first_line.title()
+            elif len(raw_chapters) == 1:
+                title = "Full Audiobook"
+            else:
+                title = f"Part {ch_idx + 1}"
+            chunks = chunk_text(chapter, max_chars=800)
+            preview = chapter.strip()[:120]
+            chapter_map.append((title, chunks, preview))
+
+        all_chunks = [c for _, clist, _ in chapter_map for c in clist]
         total = len(all_chunks)
         chunk_files = []
         tmp_dir = os.path.join(OUTPUT_DIR, f"tmp_{project_id}")
         os.makedirs(tmp_dir, exist_ok=True)
 
+        # Synthesize each chunk and collect duration_ms per chapter
+        chunk_durations_ms = []
         for i, chunk in enumerate(all_chunks):
             chunk_path = os.path.join(tmp_dir, f"chunk_{i:04d}.mp3")
-            synthesize_chunk(chunk, voice, speed, chunk_path)
+            duration_ms = synthesize_chunk(chunk, voice, speed, chunk_path)
             chunk_files.append(chunk_path)
-            progress = 10 + int((i + 1) / total * 85)
+            chunk_durations_ms.append(duration_ms)
+            progress = 10 + int((i + 1) / total * 80)
             update_project(project_id, progress=progress)
+
+        # Build chapter timestamps from accumulated chunk durations
+        chapters_data = []
+        running_ms = 0
+        dur_idx = 0
+        for title, clist, preview in chapter_map:
+            ch_start_ms = running_ms
+            for _ in clist:
+                running_ms += chunk_durations_ms[dur_idx]
+                dur_idx += 1
+            chapters_data.append({
+                "title": title,
+                "start_s": round(ch_start_ms / 1000, 1),
+                "preview": preview
+            })
+
+        update_project(project_id, progress=92)
 
         # Merge all chunks
         output_filename = f"{project_id}.mp3"
@@ -106,7 +154,13 @@ def _run_job(project_id: str):
         with _cache_lock:
             _audio_cache[ck] = output_filename
 
-        update_project(project_id, status="completed", progress=100, output_file=output_filename)
+        update_project(
+            project_id,
+            status="completed",
+            progress=100,
+            output_file=output_filename,
+            chapters=json.dumps(chapters_data)
+        )
 
     except Exception as e:
         update_project(project_id, status="failed", error_msg=str(e))
