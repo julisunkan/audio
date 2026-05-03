@@ -305,41 +305,109 @@ async function initExportButton() {
 
 // ── Dashboard: load projects ───────────────────────────────────
 function initDashboard() {
-  const list = document.getElementById("project-list");
+  const list        = document.getElementById("project-list");
   const loadMoreBtn = document.getElementById("load-more");
+  const searchEl    = document.getElementById("filter-search");
+  const statusEl    = document.getElementById("filter-status");
+  const voiceEl     = document.getElementById("filter-voice");
+  const summaryEl   = document.getElementById("filter-summary");
   if (!list) return;
 
   let offset = 0;
+  let _allProjects = []; // master copy of every loaded project
 
+  // ── Render filtered view ──────────────────────────────────────
+  function renderFiltered() {
+    const q      = (searchEl?.value || "").toLowerCase().trim();
+    const status = statusEl?.value || "";
+    const voice  = voiceEl?.value  || "";
+
+    const filtered = _allProjects.filter(p => {
+      if (q      && !p.name.toLowerCase().includes(q))  return false;
+      if (status && p.status !== status)                 return false;
+      if (voice  && p.voice  !== voice)                  return false;
+      return true;
+    });
+
+    list.innerHTML = "";
+
+    if (filtered.length === 0) {
+      const hasFilters = q || status || voice;
+      list.innerHTML = hasFilters
+        ? `<div class="empty-state"><div class="icon">🔍</div><p>No audiobooks match your filters.<br><button onclick="clearFilters()" class="btn btn-secondary btn-sm" style="margin-top:10px;">Clear Filters</button></p></div>`
+        : `<div class="empty-state"><div class="icon">📚</div><p>No audiobooks yet. <a href="/">Create your first one!</a></p></div>`;
+    } else {
+      filtered.forEach(p => list.insertAdjacentHTML("beforeend", projectCard(p)));
+    }
+
+    // Summary line
+    if (summaryEl) {
+      const hasFilters = q || status || voice;
+      if (hasFilters) {
+        summaryEl.textContent = `Showing ${filtered.length} of ${_allProjects.length} audiobook${_allProjects.length !== 1 ? "s" : ""}`;
+        summaryEl.style.display = "block";
+      } else {
+        summaryEl.style.display = "none";
+      }
+    }
+  }
+
+  // ── Populate voice dropdown from loaded data ──────────────────
+  function refreshVoiceOptions() {
+    if (!voiceEl) return;
+    const current = voiceEl.value;
+    const voices  = [...new Set(_allProjects.map(p => p.voice).filter(Boolean))].sort();
+    voiceEl.innerHTML = `<option value="">All Voices</option>` +
+      voices.map(v => `<option value="${escHtml(v)}"${v === current ? " selected" : ""}>${escHtml(v)}</option>`).join("");
+  }
+
+  // ── Load a page of projects from the API ─────────────────────
   async function loadProjects() {
     try {
-      const res = await fetch(`/api/projects?offset=${offset}`);
+      const res      = await fetch(`/api/projects?offset=${offset}`);
       const projects = await res.json();
+
       if (projects.length === 0 && offset === 0) {
         list.innerHTML = `<div class="empty-state"><div class="icon">📚</div><p>No audiobooks yet. <a href="/">Create your first one!</a></p></div>`;
         if (loadMoreBtn) loadMoreBtn.style.display = "none";
         return;
       }
-      projects.forEach(p => list.insertAdjacentHTML("beforeend", projectCard(p)));
+
+      // Merge into master list, avoiding duplicates
+      const existingIds = new Set(_allProjects.map(p => p.id));
+      projects.forEach(p => { if (!existingIds.has(p.id)) _allProjects.push(p); });
       offset += projects.length;
+
+      refreshVoiceOptions();
+      renderFiltered();
+
       if (loadMoreBtn) loadMoreBtn.style.display = projects.length < 10 ? "none" : "block";
-      // Refresh export button count after projects load
       initExportButton();
     } catch (err) {
       notify("Failed to load projects", "error");
     }
   }
 
+  // ── Filter event listeners ────────────────────────────────────
+  let searchDebounce;
+  searchEl?.addEventListener("input", () => {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(renderFiltered, 200);
+  });
+  statusEl?.addEventListener("change", renderFiltered);
+  voiceEl?.addEventListener("change",  renderFiltered);
+
+  // ── Project card HTML ─────────────────────────────────────────
   function projectCard(p) {
-    const date = p.created_at ? p.created_at.split("T")[0] : "";
+    const date    = p.created_at ? p.created_at.split("T")[0] : "";
     const actions = p.status === "completed"
-      ? `<a href="/listen/${p.id}" class="btn btn-sm btn-secondary">▶ Play</a>
+      ? `<a href="/listen/${p.id}"   class="btn btn-sm btn-secondary">▶ Play</a>
          <a href="/download/${p.id}" class="btn btn-sm btn-success">⬇ Download</a>`
-      : p.status === "processing" || p.status === "queued"
+      : (p.status === "processing" || p.status === "queued")
       ? `<a href="/listen/${p.id}" class="btn btn-sm btn-secondary">View Progress</a>`
       : `<a href="/listen/${p.id}" class="btn btn-sm btn-secondary">Details</a>`;
 
-    return `<div class="project-card">
+    return `<div class="project-card" data-id="${p.id}" data-status="${p.status}">
       <div>
         <div class="project-name">${escHtml(p.name)}</div>
         <div class="project-meta">Voice: ${escHtml(p.voice)} &bull; ${date}</div>
@@ -355,19 +423,35 @@ function initDashboard() {
   loadProjects();
   if (loadMoreBtn) loadMoreBtn.addEventListener("click", loadProjects);
 
-  // Auto-refresh in-progress items every 5s
+  // Auto-refresh in-progress items every 5 s
   setInterval(async () => {
-    const cards = list.querySelectorAll(".project-card");
-    // Simple refresh: reload page if any are processing
-    const res = await fetch("/api/projects?offset=0");
-    const projects = await res.json();
-    const anyActive = projects.some(p => p.status === "processing" || p.status === "queued");
-    if (anyActive) {
-      list.innerHTML = "";
-      offset = 0;
-      projects.forEach(p => list.insertAdjacentHTML("beforeend", projectCard(p)));
-    }
+    try {
+      const res      = await fetch("/api/projects?offset=0");
+      const projects = await res.json();
+      const anyActive = projects.some(p => p.status === "processing" || p.status === "queued");
+      if (anyActive) {
+        // Update master list entries that changed
+        projects.forEach(fresh => {
+          const idx = _allProjects.findIndex(p => p.id === fresh.id);
+          if (idx !== -1) _allProjects[idx] = fresh;
+          else _allProjects.unshift(fresh);
+        });
+        renderFiltered();
+      }
+    } catch (_) {}
   }, 5000);
+}
+
+// Called by the "Clear Filters" button rendered inside empty state
+function clearFilters() {
+  const s = document.getElementById("filter-search");
+  const st = document.getElementById("filter-status");
+  const v = document.getElementById("filter-voice");
+  if (s)  s.value  = "";
+  if (st) st.value = "";
+  if (v)  v.value  = "";
+  // Trigger re-render via the status select's change event
+  document.getElementById("filter-status")?.dispatchEvent(new Event("change"));
 }
 
 function escHtml(str) {
