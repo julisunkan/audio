@@ -59,103 +59,226 @@
   </div>
 
   <div class="card" style="max-width:100%;">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+    <!-- Header row -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
       <div class="card-title" style="margin-bottom:0;">🗂️ Manage Audiobooks</div>
       <span id="admin-book-count" style="font-size:.8rem;color:var(--muted);"></span>
     </div>
+
+    <!-- Bulk action toolbar (hidden until items selected) -->
+    <div id="bulk-toolbar" style="display:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+         background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:10px;
+         padding:10px 14px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="bulk-count-label" style="font-size:.875rem;color:#ef4444;font-weight:600;"></span>
+        <button class="btn btn-sm" onclick="clearSelection()"
+          style="background:transparent;color:var(--muted);border:1px solid var(--border);font-size:.75rem;">
+          ✕ Deselect All
+        </button>
+      </div>
+      <button id="bulk-delete-btn" class="btn btn-sm" onclick="bulkDelete()"
+        style="background:rgba(239,68,68,.2);color:#ef4444;border:1px solid rgba(239,68,68,.5);font-size:.8rem;font-weight:600;">
+        🗑 Delete Selected
+      </button>
+    </div>
+
+    <!-- Select-all header (hidden until list loads) -->
+    <div id="select-all-row" style="display:none;align-items:center;gap:10px;padding:6px 4px;margin-bottom:6px;border-bottom:1px solid var(--border);">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.8rem;color:var(--muted);user-select:none;">
+        <input type="checkbox" id="select-all-cb" onchange="toggleSelectAll(this.checked)"
+          style="width:15px;height:15px;accent-color:#ef4444;cursor:pointer;"/>
+        Select all
+      </label>
+    </div>
+
     <div id="admin-project-list">
       <div style="text-align:center;padding:20px;color:var(--muted);"><span class="spinner"></span> Loading…</div>
     </div>
   </div>
 </div>
 
+<style>
+.ab-row { display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--border);transition:background .15s; }
+.ab-row:last-child { border-bottom:none; }
+.ab-row.selected { background:rgba(239,68,68,.07);border-radius:8px; }
+.ab-row input[type=checkbox] { width:15px;height:15px;accent-color:#ef4444;cursor:pointer;flex-shrink:0; }
+</style>
+
 <script>
 (function () {
-  const ADMIN_KEY = "{{ admin_key }}";
-  const listEl    = document.getElementById("admin-project-list");
-  const countEl   = document.getElementById("admin-book-count");
-  let allProjects = [];
+  const ADMIN_KEY   = "{{ admin_key }}";
+  const listEl      = document.getElementById("admin-project-list");
+  const countEl     = document.getElementById("admin-book-count");
+  const toolbar     = document.getElementById("bulk-toolbar");
+  const bulkCountEl = document.getElementById("bulk-count-label");
+  const selectAllCb = document.getElementById("select-all-cb");
+  const selectAllRow= document.getElementById("select-all-row");
+  let allProjects   = [];
+  let selected      = new Set();
 
+  /* ── helpers ─────────────────────────────────────────── */
   function escH(s) {
     return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   }
-
   function statusColor(s) {
-    return {completed:"var(--success)",processing:"var(--warning)",queued:"var(--accent)",failed:"var(--error)"}[s] || "var(--muted)";
+    return {completed:"var(--success)",processing:"var(--warning)",queued:"var(--accent)",failed:"var(--error)"}[s]||"var(--muted)";
   }
 
+  /* ── selection state ─────────────────────────────────── */
+  function updateToolbar() {
+    const n = selected.size;
+    toolbar.style.display    = n > 0 ? "flex" : "none";
+    bulkCountEl.textContent  = `${n} audiobook${n !== 1 ? "s" : ""} selected`;
+    // sync select-all checkbox state
+    if (selectAllCb) {
+      selectAllCb.checked       = n === allProjects.length && n > 0;
+      selectAllCb.indeterminate = n > 0 && n < allProjects.length;
+    }
+    // highlight rows
+    document.querySelectorAll(".ab-row").forEach(row => {
+      row.classList.toggle("selected", selected.has(row.dataset.id));
+      const cb = row.querySelector("input[type=checkbox]");
+      if (cb) cb.checked = selected.has(row.dataset.id);
+    });
+  }
+
+  function toggleRow(id, checked) {
+    checked ? selected.add(id) : selected.delete(id);
+    updateToolbar();
+  }
+
+  window.toggleSelectAll = function(checked) {
+    selected = checked ? new Set(allProjects.map(p => p.id)) : new Set();
+    updateToolbar();
+  };
+
+  window.clearSelection = function() {
+    selected.clear();
+    updateToolbar();
+  };
+
+  /* ── render ──────────────────────────────────────────── */
   function renderList() {
     if (allProjects.length === 0) {
       listEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);">No audiobooks found.</div>`;
+      selectAllRow.style.display = "none";
       return;
     }
     countEl.textContent = `${allProjects.length} audiobook${allProjects.length !== 1 ? "s" : ""}`;
+    selectAllRow.style.display = "flex";
+
     listEl.innerHTML = allProjects.map(p => {
       const date = p.created_at ? p.created_at.split("T")[0] : "";
-      return `<div class="project-card" data-id="${p.id}" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      const isSel = selected.has(p.id);
+      return `<div class="ab-row${isSel ? " selected" : ""}" data-id="${p.id}">
+        <input type="checkbox" ${isSel ? "checked" : ""}
+          onchange="toggleRow('${p.id}', this.checked)" title="Select"/>
         <div style="flex:1;min-width:0;">
-          <div class="project-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escH(p.name)}">${escH(p.name)}</div>
-          <div class="project-meta">
+          <div class="project-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.9rem;"
+               title="${escH(p.name)}">${escH(p.name)}</div>
+          <div class="project-meta" style="font-size:.75rem;">
             <span style="color:${statusColor(p.status)};font-weight:600;">${p.status}</span>
             &bull; ${escH(p.voice)} &bull; ${date}
           </div>
         </div>
-        <div style="display:flex;gap:8px;flex-shrink:0;">
-          <a href="/listen/${p.id}" target="_blank" class="btn btn-sm btn-secondary" style="font-size:.75rem;">▶ View</a>
-          <button class="btn btn-sm" style="background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.3);font-size:.75rem;"
-            onclick="adminRename('${p.id}', this)">✏️ Rename</button>
-          <button class="btn btn-sm" style="background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3);font-size:.75rem;"
-            onclick="adminDelete('${p.id}', this)">🗑 Delete</button>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <a href="/listen/${p.id}" target="_blank" class="btn btn-sm btn-secondary" style="font-size:.72rem;padding:4px 8px;">▶</a>
+          <button class="btn btn-sm" style="background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.3);font-size:.72rem;padding:4px 8px;"
+            onclick="adminRename('${p.id}', this)">✏️</button>
+          <button class="btn btn-sm" style="background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3);font-size:.72rem;padding:4px 8px;"
+            onclick="adminDelete('${p.id}', this)">🗑</button>
         </div>
       </div>`;
     }).join("");
   }
 
+  /* ── load ────────────────────────────────────────────── */
   async function loadAll() {
     allProjects = [];
     let offset = 0;
     while (true) {
-      const res = await fetch(`/api/projects?offset=${offset}`);
+      const res  = await fetch(`/api/projects?offset=${offset}`);
       const page = await res.json();
       if (!page.length) break;
       allProjects.push(...page);
       if (page.length < 10) break;
       offset += page.length;
     }
+    selected.clear();
     renderList();
   }
 
+  /* ── single delete ───────────────────────────────────── */
   window.adminDelete = async function(id, btn) {
     if (!confirm("Permanently delete this audiobook? This cannot be undone.")) return;
-    btn.disabled = true;
+    btn.disabled    = true;
     btn.textContent = "…";
     try {
       const res  = await fetch(`/api/project/${id}/delete?key=${ADMIN_KEY}`, { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Delete failed");
       allProjects = allProjects.filter(p => p.id !== id);
+      selected.delete(id);
       renderList();
+      updateToolbar();
       notify("Audiobook deleted.", "success");
     } catch (err) {
       notify(err.message, "error");
-      btn.disabled = false;
-      btn.textContent = "🗑 Delete";
+      btn.disabled    = false;
+      btn.textContent = "🗑";
     }
   };
 
+  /* ── bulk delete ─────────────────────────────────────── */
+  window.bulkDelete = async function() {
+    const ids = [...selected];
+    if (!ids.length) return;
+    const n   = ids.length;
+    if (!confirm(`Permanently delete ${n} audiobook${n !== 1 ? "s" : ""}? This cannot be undone.`)) return;
+
+    const bulkBtn       = document.getElementById("bulk-delete-btn");
+    bulkBtn.disabled    = true;
+    bulkBtn.textContent = `Deleting ${n}…`;
+
+    let deleted = 0, failed = 0;
+    await Promise.all(ids.map(async id => {
+      try {
+        const res = await fetch(`/api/project/${id}/delete?key=${ADMIN_KEY}`, { method: "POST" });
+        if (!res.ok) throw new Error();
+        deleted++;
+        allProjects = allProjects.filter(p => p.id !== id);
+        selected.delete(id);
+      } catch {
+        failed++;
+      }
+    }));
+
+    renderList();
+    updateToolbar();
+    bulkBtn.disabled    = false;
+    bulkBtn.textContent = "🗑 Delete Selected";
+
+    if (failed === 0) {
+      notify(`${deleted} audiobook${deleted !== 1 ? "s" : ""} deleted.`, "success");
+    } else {
+      notify(`${deleted} deleted, ${failed} failed.`, "warning");
+    }
+  };
+
+  /* ── rename ──────────────────────────────────────────── */
   window.adminRename = async function(id, btn) {
-    const card = document.querySelector(`.project-card[data-id="${id}"]`);
-    const nameEl = card?.querySelector(".project-name");
+    const card    = document.querySelector(`.ab-row[data-id="${id}"]`);
+    const nameEl  = card?.querySelector(".project-name");
     const current = nameEl ? nameEl.textContent : "";
     const newName = prompt("New name for this audiobook:", current);
     if (!newName || newName.trim() === "" || newName.trim() === current) return;
-    btn.disabled = true;
+    btn.disabled    = true;
     btn.textContent = "…";
     try {
       const res  = await fetch(`/api/project/${id}/rename?key=${ADMIN_KEY}`, {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim() })
+        body:    JSON.stringify({ name: newName.trim() })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Rename failed");
@@ -166,8 +289,8 @@
     } catch (err) {
       notify(err.message, "error");
     } finally {
-      btn.disabled = false;
-      btn.textContent = "✏️ Rename";
+      btn.disabled    = false;
+      btn.textContent = "✏️";
     }
   };
 
