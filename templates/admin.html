@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Admin — Texts to Audiobooks Creator{% endblock %}
+{% block content %}
+<div class="container" style="max-width:600px;">
+  <div class="page-title">🔧 Admin Panel</div>
+  <div class="page-subtitle">Manage API keys and configuration. This page is hidden.</div>
+
+  {% if message %}
+  <div style="background:rgba(16,185,129,.12);border:1px solid var(--success);border-radius:8px;padding:14px;color:var(--success);margin-bottom:20px;">
+    ✅ {{ message }}
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-title">🔑 API Keys</div>
+
+    <div class="key-status">
+      <div class="dot {% if groq_key_set %}dot-green{% else %}dot-red{% endif %}"></div>
+      Groq API Key: <strong>{% if groq_key_set %}Configured{% else %}Not set{% endif %}</strong>
+    </div>
+    <div class="key-status">
+      <div class="dot {% if hf_key_set %}dot-green{% else %}dot-red{% endif %}"></div>
+      HuggingFace API Key: <strong>{% if hf_key_set %}Configured{% else %}Not set (optional){% endif %}</strong>
+    </div>
+
+    <hr class="divider"/>
+
+    <form method="POST" action="/julisunkan?key={{ admin_key }}">
+      <div class="form-group">
+        <label for="groq_api_key">Groq API Key</label>
+        <input type="password" id="groq_api_key" name="groq_api_key"
+               placeholder="{% if groq_key_set %}••••••••••••• (leave blank to keep current){% else %}gsk_…{% endif %}"/>
+        <p style="font-size:.75rem;color:var(--muted);margin-top:4px;">
+          Get your free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a>.
+          Used for AI text cleaning before narration.
+        </p>
+      </div>
+      <div class="form-group">
+        <label for="hf_api_key">HuggingFace API Key (optional)</label>
+        <input type="password" id="hf_api_key" name="hf_api_key"
+               placeholder="{% if hf_key_set %}••••••••••••• (leave blank to keep current){% else %}hf_…{% endif %}"/>
+        <p style="font-size:.75rem;color:var(--muted);margin-top:4px;">
+          Reserved for future model integrations.
+        </p>
+      </div>
+      <button type="submit" class="btn btn-primary">Save Settings</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-title">ℹ️ System Info</div>
+    <div style="font-size:.85rem;color:var(--muted);line-height:1.9;">
+      <div>TTS Engine: <strong style="color:var(--text);">Microsoft Edge TTS (edge-tts)</strong></div>
+      <div>AI Cleaning: <strong style="color:var(--text);">Groq llama-3.3-70b-versatile</strong></div>
+      <div>Audio Format: <strong style="color:var(--text);">MP3 @ 64kbps</strong></div>
+      <div>Background Workers: <strong style="color:var(--text);">Max 2 threads</strong></div>
+      <div>File Retention: <strong style="color:var(--text);">3 days auto-delete</strong></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

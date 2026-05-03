@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} — Texts to Audiobooks Creator{% endblock %}
+{% block content %}
+<body data-project-id="{{ project.id }}">
+<div class="container">
+  <div style="margin-bottom:16px;">
+    <a href="/dashboard" style="color:var(--muted);font-size:.85rem;">← Back to Dashboard</a>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+      <div>
+        <div class="page-title" style="margin-bottom:4px;">{{ project.name }}</div>
+        <div style="font-size:.85rem;color:var(--muted);">
+          Voice: <strong>{{ project.voice }}</strong> &bull;
+          Style: <strong>{{ project.style }}</strong> &bull;
+          Speed: <strong>{{ project.speed }}x</strong>
+        </div>
+      </div>
+      <span id="status-badge" class="badge badge-{{ project.status }}">{{ project.status }}</span>
+    </div>
+
+    <!-- Progress -->
+    {% if project.status in ['queued', 'processing'] %}
+    <div id="progress-section">
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progress-bar" style="width:{{ project.progress }}%"></div>
+      </div>
+      <div class="progress-text" id="progress-text">{{ project.progress }}% complete — generating your audiobook…</div>
+    </div>
+    {% endif %}
+
+    <!-- Error -->
+    <div id="error-section" style="display:{% if project.status == 'failed' %}block{% else %}none{% endif %};">
+      <div style="background:rgba(239,68,68,.1);border:1px solid var(--error);border-radius:8px;padding:14px;color:var(--error);margin-top:12px;">
+        ⚠️ Generation failed: <span class="error-msg">{{ project.error_msg or 'Unknown error' }}</span>
+      </div>
+      <p style="margin-top:10px;font-size:.85rem;color:var(--muted);">
+        Please try creating a new audiobook. If the issue persists, check your Groq API key in the
+        <a href="/julisunkan?key=julisunkan">admin panel</a>.
+      </p>
+    </div>
+
+    <!-- Player -->
+    <div id="player-section" style="display:{% if project.status == 'completed' %}block{% else %}none{% endif %};">
+      <div class="audio-player-wrap">
+        <audio controls preload="metadata" {% if project.status == 'completed' %}src="/stream/{{ project.id }}"{% endif %}>
+          Your browser does not support the audio element.
+        </audio>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+        <a href="/download/{{ project.id }}" class="btn btn-success">⬇ Download MP3</a>
+        <button class="btn btn-secondary" onclick="copyLink()">🔗 Copy Shareable Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Text Preview -->
+  <div class="card">
+    <div class="card-title">📄 Source Text Preview</div>
+    <div style="background:var(--surface2);border-radius:8px;padding:16px;max-height:200px;overflow-y:auto;font-size:.875rem;line-height:1.7;color:var(--muted);white-space:pre-wrap;">{{ project.text[:1000] }}{% if project.text|length > 1000 %}…<br/><span style="color:var(--accent);font-size:.8rem;">[{{ project.text|length }} characters total]</span>{% endif %}</div>
+  </div>
+</div>
+
+<script>
+function copyLink() {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    notify("Link copied to clipboard!", "success");
+  }).catch(() => {
+    notify("Could not copy link.", "error");
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Create Audiobook — Texts to Audiobooks Creator{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-title">🎙️ Create Your Audiobook</div>
+  <div class="page-subtitle">Paste text or upload a file — we'll turn it into a high-quality audiobook.</div>
+
+  <form id="create-form" enctype="multipart/form-data">
+    <!-- Step 1: Text Input -->
+    <div class="card">
+      <div class="card-title">📝 Step 1 — Your Text</div>
+      <div class="tabs">
+        <button type="button" class="tab-btn active" data-group="input" data-target="tab-paste">Paste Text</button>
+        <button type="button" class="tab-btn" data-group="input" data-target="tab-upload">Upload File</button>
+      </div>
+      <div id="tab-paste" class="tab-panel active" data-group="input">
+        <div class="form-group">
+          <label for="text-input">Your text (paste here)</label>
+          <textarea id="text-input" name="text" placeholder="Paste your story, article, or document here…"></textarea>
+        </div>
+      </div>
+      <div id="tab-upload" class="tab-panel" data-group="input">
+        <div class="drop-zone">
+          <input type="file" name="file" accept=".txt,.pdf,.docx"/>
+          <div class="icon">📂</div>
+          <div>Drag &amp; drop or click to browse</div>
+          <div class="hint">Supported formats: .txt, .pdf, .docx — max 50 MB</div>
+          <div class="selected-file"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Voice -->
+    <div class="card">
+      <div class="card-title">🎤 Step 2 — Choose a Voice</div>
+      <input type="hidden" id="voice-input" name="voice" value="{{ voices[0] }}"/>
+      <div class="voice-grid">
+        {% set accents = {
+          "Emma (US Female)": "🇺🇸 US",
+          "Guy (US Male)": "🇺🇸 US",
+          "Aria (US Female)": "🇺🇸 US",
+          "Davis (US Male)": "🇺🇸 US",
+          "Jenny (US Female)": "🇺🇸 US",
+          "Sonia (UK Female)": "🇬🇧 UK",
+          "Ryan (UK Male)": "🇬🇧 UK",
+          "Natasha (AU Female)": "🇦🇺 AU",
+          "William (AU Male)": "🇦🇺 AU",
+          "Clara (CA Female)": "🇨🇦 CA"
+        } %}
+        {% for v in voices %}
+        <div class="voice-card" data-voice="{{ v }}">
+          <div class="vname">{{ v.split("(")[0].strip() }}</div>
+          <div class="vtag">{{ accents.get(v, "") }} &bull; {{ "Female" if "Female" in v else "Male" }}</div>
+          <button type="button" class="preview-btn" data-voice="{{ v }}">▶ Preview</button>
+        </div>
+        {% endfor %}
+      </div>
+
+      <hr class="divider"/>
+
+      <div class="card-title" style="font-size:.85rem; color: var(--muted); margin-bottom:10px;">📁 Upload Your Own Voice Sample (optional)</div>
+      <div id="voice-sample-form-wrap">
+        <form id="voice-sample-form" enctype="multipart/form-data" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <input type="file" name="voice_sample" accept=".mp3,.wav,.ogg,.m4a" style="width:auto;flex:1;min-width:200px;"/>
+          <button type="submit" class="btn btn-secondary btn-sm">Upload Sample</button>
+        </form>
+        <p style="font-size:.75rem;color:var(--muted);margin-top:6px;">Voice cloning is a future feature. Your sample will be stored for future use.</p>
+      </div>
+    </div>
+
+    <!-- Step 3: Options -->
+    <div class="card">
+      <div class="card-title">⚙️ Step 3 — Options</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name-input">Audiobook Name</label>
+          <input type="text" id="name-input" name="name" placeholder="My Audiobook"/>
+        </div>
+        <div class="form-group">
+          <label for="style-select">Narration Style</label>
+          <select id="style-select" name="style">
+            <option value="storytelling">📖 Storytelling</option>
+            <option value="news">📰 News / Professional</option>
+            <option value="calm">🌿 Calm / Meditative</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Playback Speed: <span id="speed-label">1.00x</span></label>
+        <input type="range" id="speed-slider" name="speed" min="0.75" max="1.5" step="0.05" value="1.0"/>
+        <div class="range-labels"><span>0.75x (Slow)</span><span>1.0x (Normal)</span><span>1.5x (Fast)</span></div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;">
+      🎙️ Create Audiobook
+    </button>
+  </form>
+</div>
+{% endblock %}

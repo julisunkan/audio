@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Texts to Audiobooks Creator{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-title">📚 My Audiobooks</div>
+  <div class="page-subtitle">Your recent audiobook projects. Click a project to view details or download.</div>
+
+  <div id="project-list" class="project-list">
+    <div style="text-align:center;padding:32px;color:var(--muted);">
+      <span class="spinner"></span> Loading projects…
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:20px;">
+    <button id="load-more" class="btn btn-secondary" style="display:none;">Load More</button>
+  </div>
+
+  <div style="text-align:center;margin-top:32px;">
+    <a href="/" class="btn btn-primary">+ Create New Audiobook</a>
+  </div>
+</div>
+{% endblock %}
