@@ -106,69 +106,90 @@
 
 <!-- Report Modal -->
 <div id="report-modal" style="display:none;position:fixed;inset:0;z-index:9999;
-     background:rgba(7,13,26,.82);backdrop-filter:blur(6px);
-     align-items:center;justify-content:center;padding:16px;">
-  <div style="background:var(--surface);border:1px solid rgba(239,68,68,.35);border-radius:18px;
-       box-shadow:0 0 48px rgba(239,68,68,.18),0 20px 60px rgba(0,0,0,.6);
-       width:100%;max-width:480px;padding:28px 28px 24px;position:relative;animation:fadeUp .25s ease;">
-    <!-- close -->
-    <button onclick="closeReportModal()" style="position:absolute;top:16px;right:16px;
-      background:var(--surface2);border:1px solid var(--border);border-radius:8px;
-      color:var(--muted);font-size:1.1rem;width:32px;height:32px;cursor:pointer;
-      display:flex;align-items:center;justify-content:center;transition:color .2s,background .2s;"
-      onmouseover="this.style.color='var(--text)';this.style.background='var(--surface3)'"
-      onmouseout="this.style.color='var(--muted)';this.style.background='var(--surface2)'"
-      title="Close">✕</button>
+     background:rgba(7,13,26,.85);backdrop-filter:blur(8px);
+     align-items:center;justify-content:center;padding:12px;">
 
-    <div style="font-size:2rem;margin-bottom:10px;">🚩</div>
-    <h2 style="font-size:1.2rem;font-weight:800;color:var(--text);margin:0 0 6px;">Report Content</h2>
-    <p style="font-size:.85rem;color:var(--muted);margin:0 0 20px;line-height:1.6;">
-      Something wrong with this audiobook? Let us know and our admin team will review it promptly.
-    </p>
+  <div style="background:var(--surface);border:1px solid rgba(239,68,68,.3);border-radius:20px;
+       box-shadow:0 0 60px rgba(239,68,68,.15),0 24px 64px rgba(0,0,0,.7);
+       width:100%;max-width:560px;position:relative;overflow:hidden;">
 
-    <div id="report-form">
-      <div class="form-group" style="margin-bottom:14px;">
-        <label style="font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:8px;">
-          Reason <span style="color:#ef4444;">*</span>
-        </label>
-        <div style="display:flex;flex-direction:column;gap:8px;" id="reason-options">
-          {% for r in ["Inappropriate / offensive content", "Copyrighted material", "Spam or misleading", "Privacy violation", "Other"] %}
-          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;
-            background:var(--surface2);border:1px solid var(--border);border-radius:10px;
-            padding:10px 14px;transition:border-color .15s,background .15s;"
-            onmouseover="this.style.borderColor='rgba(239,68,68,.4)';this.style.background='rgba(239,68,68,.05)'"
-            onmouseout="if(!this.querySelector('input').checked){this.style.borderColor='var(--border)';this.style.background='var(--surface2)'}">
-            <input type="radio" name="report-reason" value="{{ r }}"
-              style="accent-color:#ef4444;width:15px;height:15px;cursor:pointer;flex-shrink:0;"
-              onchange="highlightReason()"/>
-            <span style="font-size:.875rem;color:var(--text);">{{ r }}</span>
-          </label>
-          {% endfor %}
+    <!-- Top accent bar -->
+    <div style="height:4px;background:linear-gradient(90deg,#ef4444,#f97316,#ef4444);background-size:200%;
+         animation:shimmer 2s linear infinite;"></div>
+
+    <!-- Header row -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:1.5rem;line-height:1;">🚩</span>
+        <div>
+          <div style="font-size:1rem;font-weight:800;color:var(--text);line-height:1.2;">Report Content</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:2px;">Help us keep content safe and lawful</div>
         </div>
       </div>
+      <button onclick="closeReportModal()"
+        style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+        color:var(--muted);font-size:.9rem;width:30px;height:30px;cursor:pointer;flex-shrink:0;
+        display:flex;align-items:center;justify-content:center;transition:all .2s;"
+        onmouseover="this.style.background='rgba(239,68,68,.15)';this.style.borderColor='rgba(239,68,68,.4)';this.style.color='#f87171'"
+        onmouseout="this.style.background='var(--surface2)';this.style.borderColor='var(--border)';this.style.color='var(--muted)'"
+        title="Close">✕</button>
+    </div>
 
-      <div class="form-group" style="margin-bottom:20px;">
-        <label for="report-details" style="font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:8px;">
-          Additional Details <span style="color:var(--muted);font-weight:400;">(optional)</span>
+    <!-- Body -->
+    <div style="padding:0 22px 22px;">
+
+      <!-- Reason pills (2-column grid) -->
+      <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+           letter-spacing:.08em;margin-bottom:8px;">
+        Select a reason <span style="color:#ef4444;">*</span>
+      </div>
+      <div id="reason-options" style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px;">
+        {% for r, icon in [
+          ("Inappropriate / offensive content", "🔞"),
+          ("Copyrighted material",              "©️"),
+          ("Spam or misleading",                "⚠️"),
+          ("Privacy violation",                 "🔒"),
+          ("Other",                             "💬")
+        ] %}
+        <label class="reason-pill" data-val="{{ r }}"
+          style="display:flex;align-items:center;gap:8px;cursor:pointer;
+          background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+          padding:9px 12px;transition:all .15s;user-select:none;
+          {% if loop.last %}grid-column:1/-1;{% endif %}">
+          <input type="radio" name="report-reason" value="{{ r }}"
+            style="position:absolute;opacity:0;pointer-events:none;"
+            onchange="pickReason(this)"/>
+          <span style="font-size:1rem;flex-shrink:0;">{{ icon }}</span>
+          <span style="font-size:.82rem;color:var(--text);line-height:1.3;font-weight:500;">{{ r }}</span>
         </label>
-        <textarea id="report-details" rows="3" maxlength="500"
-          placeholder="Describe the issue briefly…"
-          style="width:100%;resize:vertical;min-height:72px;"></textarea>
-        <div style="font-size:.72rem;color:var(--muted);margin-top:4px;text-align:right;">
-          <span id="details-count">0</span>/500
+        {% endfor %}
+      </div>
+
+      <!-- Details + submit row -->
+      <div style="display:flex;gap:10px;align-items:flex-start;">
+        <div style="flex:1;">
+          <textarea id="report-details" rows="2" maxlength="500"
+            placeholder="Optional: add more context…"
+            style="width:100%;resize:none;min-height:58px;font-size:.82rem;"></textarea>
+          <div style="font-size:.68rem;color:var(--muted);margin-top:3px;text-align:right;">
+            <span id="details-count">0</span>/500
+          </div>
         </div>
+        <button onclick="submitReport()" id="report-submit-btn"
+          style="flex-shrink:0;margin-top:0;height:58px;padding:0 20px;
+          background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;
+          border:none;border-radius:10px;font-size:.85rem;font-weight:700;
+          cursor:pointer;transition:all .2s;white-space:nowrap;
+          box-shadow:0 4px 16px rgba(239,68,68,.35);"
+          onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(239,68,68,.5)'"
+          onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(239,68,68,.35)'">
+          🚩 Submit
+        </button>
       </div>
 
-      <div id="report-msg" style="display:none;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.875rem;font-weight:600;"></div>
-
-      <div style="display:flex;gap:10px;">
-        <button onclick="submitReport()" id="report-submit-btn" class="btn btn-danger" style="flex:1;">
-          🚩 Submit Report
-        </button>
-        <button onclick="closeReportModal()" class="btn btn-ghost" style="flex:0 0 auto;">
-          Cancel
-        </button>
-      </div>
+      <!-- Status message -->
+      <div id="report-msg" style="display:none;border-radius:10px;padding:10px 14px;
+           margin-top:12px;font-size:.85rem;font-weight:600;"></div>
     </div>
   </div>
 </div>
@@ -194,54 +215,79 @@
     if (e.target === this) closeReportModal();
   });
 
-  window.highlightReason = function () {
-    document.querySelectorAll("#reason-options label").forEach(lbl => {
-      const inp = lbl.querySelector("input");
-      lbl.style.borderColor = inp.checked ? "rgba(239,68,68,.55)" : "var(--border)";
-      lbl.style.background  = inp.checked ? "rgba(239,68,68,.09)" : "var(--surface2)";
+  // Pill selection
+  function resetPills() {
+    document.querySelectorAll(".reason-pill").forEach(lbl => {
+      lbl.style.borderColor  = "var(--border)";
+      lbl.style.background   = "var(--surface2)";
+      lbl.style.boxShadow    = "none";
+      lbl.querySelector("span:last-child").style.color = "var(--text)";
     });
+  }
+
+  window.pickReason = function (inp) {
+    resetPills();
+    const lbl = inp.closest(".reason-pill");
+    if (lbl) {
+      lbl.style.borderColor  = "rgba(239,68,68,.6)";
+      lbl.style.background   = "rgba(239,68,68,.1)";
+      lbl.style.boxShadow    = "0 0 0 3px rgba(239,68,68,.15)";
+      lbl.querySelector("span:last-child").style.color = "#fca5a5";
+    }
   };
+
+  // Click on pill label triggers the hidden radio
+  document.querySelectorAll(".reason-pill").forEach(lbl => {
+    lbl.addEventListener("click", () => {
+      const inp = lbl.querySelector("input[type=radio]");
+      inp.checked = true;
+      pickReason(inp);
+    });
+  });
 
   // Character count
   const detailsEl = document.getElementById("report-details");
   const countEl   = document.getElementById("details-count");
   detailsEl.addEventListener("input", () => { countEl.textContent = detailsEl.value.length; });
 
-  function clearReportForm () {
+  function clearReportForm() {
     document.querySelectorAll("input[name='report-reason']").forEach(r => r.checked = false);
-    document.querySelectorAll("#reason-options label").forEach(lbl => {
-      lbl.style.borderColor = "var(--border)";
-      lbl.style.background  = "var(--surface2)";
-    });
-    detailsEl.value = "";
+    resetPills();
+    detailsEl.value    = "";
     countEl.textContent = "0";
     hideMsg();
     const btn = document.getElementById("report-submit-btn");
-    btn.disabled = false;
-    btn.innerHTML = "🚩 Submit Report";
+    btn.disabled    = false;
+    btn.textContent = "🚩 Submit";
+    btn.style.background = "linear-gradient(135deg,#ef4444,#dc2626)";
   }
 
   function showMsg(text, type) {
     const el = document.getElementById("report-msg");
-    el.style.display = "block";
+    el.style.display    = "block";
     el.style.background = type === "success" ? "rgba(16,185,129,.12)" : "rgba(239,68,68,.12)";
     el.style.border     = type === "success" ? "1px solid rgba(16,185,129,.35)" : "1px solid rgba(239,68,68,.35)";
     el.style.color      = type === "success" ? "#34d399" : "#f87171";
     el.textContent      = text;
   }
 
-  function hideMsg () {
+  function hideMsg() {
     document.getElementById("report-msg").style.display = "none";
   }
 
   window.submitReport = async function () {
-    const reason = (document.querySelector("input[name='report-reason']:checked") || {}).value || "";
-    if (!reason) { showMsg("Please select a reason.", "error"); return; }
-
+    const checked = document.querySelector("input[name='report-reason']:checked");
+    if (!checked) {
+      showMsg("⚠️ Please select a reason first.", "error");
+      return;
+    }
+    const reason  = checked.value;
     const details = detailsEl.value.trim();
     const btn     = document.getElementById("report-submit-btn");
-    btn.disabled  = true;
-    btn.innerHTML = "Submitting…";
+
+    btn.disabled    = true;
+    btn.textContent = "Sending…";
+    btn.style.background = "rgba(239,68,68,.4)";
     hideMsg();
 
     try {
@@ -253,17 +299,20 @@
       const data = await res.json();
       if (!res.ok) {
         showMsg(data.error || "Submission failed. Please try again.", "error");
-        btn.disabled  = false;
-        btn.innerHTML = "🚩 Submit Report";
+        btn.disabled    = false;
+        btn.textContent = "🚩 Submit";
+        btn.style.background = "linear-gradient(135deg,#ef4444,#dc2626)";
         return;
       }
       showMsg("✅ " + data.message, "success");
-      btn.innerHTML = "✅ Reported";
-      setTimeout(closeReportModal, 2200);
+      btn.textContent      = "✅ Sent";
+      btn.style.background = "linear-gradient(135deg,#10b981,#059669)";
+      setTimeout(closeReportModal, 2400);
     } catch {
       showMsg("Network error. Please try again.", "error");
-      btn.disabled  = false;
-      btn.innerHTML = "🚩 Submit Report";
+      btn.disabled    = false;
+      btn.textContent = "🚩 Submit";
+      btn.style.background = "linear-gradient(135deg,#ef4444,#dc2626)";
     }
   };
 })();
