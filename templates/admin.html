@@ -57,5 +57,121 @@
       <div>File Retention: <strong style="color:var(--text);">3 days auto-delete</strong></div>
     </div>
   </div>
+
+  <div class="card" style="max-width:100%;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+      <div class="card-title" style="margin-bottom:0;">🗂️ Manage Audiobooks</div>
+      <span id="admin-book-count" style="font-size:.8rem;color:var(--muted);"></span>
+    </div>
+    <div id="admin-project-list">
+      <div style="text-align:center;padding:20px;color:var(--muted);"><span class="spinner"></span> Loading…</div>
+    </div>
+  </div>
 </div>
+
+<script>
+(function () {
+  const ADMIN_KEY = "{{ admin_key }}";
+  const listEl    = document.getElementById("admin-project-list");
+  const countEl   = document.getElementById("admin-book-count");
+  let allProjects = [];
+
+  function escH(s) {
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function statusColor(s) {
+    return {completed:"var(--success)",processing:"var(--warning)",queued:"var(--accent)",failed:"var(--error)"}[s] || "var(--muted)";
+  }
+
+  function renderList() {
+    if (allProjects.length === 0) {
+      listEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);">No audiobooks found.</div>`;
+      return;
+    }
+    countEl.textContent = `${allProjects.length} audiobook${allProjects.length !== 1 ? "s" : ""}`;
+    listEl.innerHTML = allProjects.map(p => {
+      const date = p.created_at ? p.created_at.split("T")[0] : "";
+      return `<div class="project-card" data-id="${p.id}" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div style="flex:1;min-width:0;">
+          <div class="project-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escH(p.name)}">${escH(p.name)}</div>
+          <div class="project-meta">
+            <span style="color:${statusColor(p.status)};font-weight:600;">${p.status}</span>
+            &bull; ${escH(p.voice)} &bull; ${date}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <a href="/listen/${p.id}" target="_blank" class="btn btn-sm btn-secondary" style="font-size:.75rem;">▶ View</a>
+          <button class="btn btn-sm" style="background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.3);font-size:.75rem;"
+            onclick="adminRename('${p.id}', this)">✏️ Rename</button>
+          <button class="btn btn-sm" style="background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3);font-size:.75rem;"
+            onclick="adminDelete('${p.id}', this)">🗑 Delete</button>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  async function loadAll() {
+    allProjects = [];
+    let offset = 0;
+    while (true) {
+      const res = await fetch(`/api/projects?offset=${offset}`);
+      const page = await res.json();
+      if (!page.length) break;
+      allProjects.push(...page);
+      if (page.length < 10) break;
+      offset += page.length;
+    }
+    renderList();
+  }
+
+  window.adminDelete = async function(id, btn) {
+    if (!confirm("Permanently delete this audiobook? This cannot be undone.")) return;
+    btn.disabled = true;
+    btn.textContent = "…";
+    try {
+      const res  = await fetch(`/api/project/${id}/delete?key=${ADMIN_KEY}`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Delete failed");
+      allProjects = allProjects.filter(p => p.id !== id);
+      renderList();
+      notify("Audiobook deleted.", "success");
+    } catch (err) {
+      notify(err.message, "error");
+      btn.disabled = false;
+      btn.textContent = "🗑 Delete";
+    }
+  };
+
+  window.adminRename = async function(id, btn) {
+    const card = document.querySelector(`.project-card[data-id="${id}"]`);
+    const nameEl = card?.querySelector(".project-name");
+    const current = nameEl ? nameEl.textContent : "";
+    const newName = prompt("New name for this audiobook:", current);
+    if (!newName || newName.trim() === "" || newName.trim() === current) return;
+    btn.disabled = true;
+    btn.textContent = "…";
+    try {
+      const res  = await fetch(`/api/project/${id}/rename?key=${ADMIN_KEY}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Rename failed");
+      const proj = allProjects.find(p => p.id === id);
+      if (proj) proj.name = data.name;
+      renderList();
+      notify("Renamed successfully.", "success");
+    } catch (err) {
+      notify(err.message, "error");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "✏️ Rename";
+    }
+  };
+
+  loadAll();
+})();
+</script>
 {% endblock %}

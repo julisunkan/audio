@@ -13,3 +13,4 @@ gTTS
 pydub
 pypdf
 python-docx
+Pillow
