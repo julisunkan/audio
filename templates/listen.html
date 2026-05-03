@@ -61,13 +61,4 @@
   </div>
 </div>
 
-<script>
-function copyLink() {
-  navigator.clipboard.writeText(window.location.href).then(() => {
-    notify("Link copied to clipboard!", "success");
-  }).catch(() => {
-    notify("Could not copy link.", "error");
-  });
-}
-</script>
 {% endblock %}
