@@ -2,8 +2,20 @@
 {% block title %}Dashboard — Texts to Audiobooks Creator{% endblock %}
 {% block content %}
 <div class="container">
-  <div class="page-title">📚 My Audiobooks</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
+    <div class="page-title" style="margin-bottom:0;">📚 My Audiobooks</div>
+    <button id="export-zip-btn" class="btn btn-secondary" style="display:none;" onclick="exportAllZip()">
+      📦 Download All as ZIP
+    </button>
+  </div>
   <div class="page-subtitle">Your recent audiobook projects. Click a project to view details or download.</div>
+
+  <div id="export-progress" style="display:none;" class="card" style="padding:14px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="spinner"></span>
+      <span id="export-progress-text" style="font-size:.9rem;color:var(--muted);">Preparing your ZIP file…</span>
+    </div>
+  </div>
 
   <div id="project-list" class="project-list">
     <div style="text-align:center;padding:32px;color:var(--muted);">

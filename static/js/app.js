@@ -252,6 +252,57 @@ function initProjectPoll(projectId) {
   poll();
 }
 
+// ── Batch ZIP Export ───────────────────────────────────────────
+async function exportAllZip() {
+  const btn = document.getElementById("export-zip-btn");
+  const progressBox = document.getElementById("export-progress");
+  const progressText = document.getElementById("export-progress-text");
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Preparing…';
+  if (progressBox) progressBox.style.display = "block";
+  if (progressText) progressText.textContent = "Building ZIP — this may take a moment…";
+
+  try {
+    const res = await fetch("/api/export-zip");
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || "Export failed");
+    }
+    // Stream download via blob
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "audiobooks_export.zip";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    notify("ZIP downloaded successfully!", "success");
+  } catch (err) {
+    notify("Export failed: " + err.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = "📦 Download All as ZIP";
+    if (progressBox) progressBox.style.display = "none";
+  }
+}
+
+// Show export button only when there are completed audiobooks
+async function initExportButton() {
+  const btn = document.getElementById("export-zip-btn");
+  if (!btn) return;
+  try {
+    const res = await fetch("/api/export-zip/count");
+    const data = await res.json();
+    if (data.count > 0) {
+      btn.style.display = "inline-flex";
+      btn.innerHTML = `📦 Download All as ZIP <span style="background:rgba(255,255,255,.15);border-radius:999px;padding:1px 8px;font-size:.75rem;margin-left:4px;">${data.count}</span>`;
+    }
+  } catch (_) {}
+}
+
 // ── Dashboard: load projects ───────────────────────────────────
 function initDashboard() {
   const list = document.getElementById("project-list");
@@ -272,6 +323,8 @@ function initDashboard() {
       projects.forEach(p => list.insertAdjacentHTML("beforeend", projectCard(p)));
       offset += projects.length;
       if (loadMoreBtn) loadMoreBtn.style.display = projects.length < 10 ? "none" : "block";
+      // Refresh export button count after projects load
+      initExportButton();
     } catch (err) {
       notify("Failed to load projects", "error");
     }

@@ -9,6 +9,9 @@ import time
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 
+import io
+import zipfile
+
 from flask import (Flask, render_template, request, jsonify,
                    send_file, redirect, url_for, abort, Response)
 
@@ -215,6 +218,52 @@ def api_create():
     executor.submit(_run_job, project_id)
 
     return jsonify({"project_id": project_id, "status": "queued"})
+
+
+@app.route("/api/export-zip")
+def api_export_zip():
+    """Build a ZIP of all completed audiobooks and stream it."""
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT id, name, output_file FROM projects WHERE status='completed' ORDER BY created_at DESC"
+    ).fetchall()
+    conn.close()
+
+    completed = [(r["id"], r["name"], r["output_file"]) for r in rows
+                 if r["output_file"] and os.path.exists(os.path.join(OUTPUT_DIR, r["output_file"]))]
+
+    if not completed:
+        return jsonify({"error": "No completed audiobooks to export"}), 404
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for pid, name, fname in completed:
+            safe = name.replace(" ", "_")[:50]
+            src = os.path.join(OUTPUT_DIR, fname)
+            zf.write(src, arcname=f"{safe}_{pid[:8]}.mp3")
+    buf.seek(0)
+
+    return send_file(
+        buf,
+        as_attachment=True,
+        download_name="audiobooks_export.zip",
+        mimetype="application/zip"
+    )
+
+
+@app.route("/api/export-zip/count")
+def api_export_zip_count():
+    """Return count of completed exportable audiobooks."""
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT output_file FROM projects WHERE status='completed'"
+    ).fetchall()
+    conn.close()
+    count = sum(
+        1 for r in rows
+        if r["output_file"] and os.path.exists(os.path.join(OUTPUT_DIR, r["output_file"]))
+    )
+    return jsonify({"count": count})
 
 
 @app.route("/api/preview-voice", methods=["POST"])
