@@ -411,6 +411,11 @@ function initDashboard() {
       ? `<a href="/listen/${p.id}" class="btn btn-sm btn-secondary">View Progress</a>`
       : `<a href="/listen/${p.id}" class="btn btn-sm btn-secondary">Details</a>`;
 
+    const renameBtn = isAdmin
+      ? `<button class="btn btn-sm" style="background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.3);"
+           onclick="renameProject('${p.id}', this)" title="Rename project">✏️</button>`
+      : "";
+
     const deleteBtn = isAdmin
       ? `<button class="btn btn-sm" style="background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3);"
            onclick="deleteProject('${p.id}', this)" title="Delete project">🗑</button>`
@@ -425,6 +430,7 @@ function initDashboard() {
       <div class="project-actions">
         <span class="badge badge-${p.status}">${p.status}</span>
         ${actions}
+        ${renameBtn}
         ${deleteBtn}
       </div>
     </div>`;
@@ -462,6 +468,37 @@ function clearFilters() {
   if (v)  v.value  = "";
   // Trigger re-render via the status select's change event
   document.getElementById("filter-status")?.dispatchEvent(new Event("change"));
+}
+
+// ── Admin: rename a project ───────────────────────────────────
+async function renameProject(id, btn) {
+  const card        = document.querySelector(`.project-card[data-id="${id}"]`);
+  const nameEl      = card?.querySelector(".project-name");
+  const currentName = nameEl ? nameEl.textContent : "";
+
+  const newName = prompt("Enter a new name for this audiobook:", currentName);
+  if (!newName || newName.trim() === "" || newName.trim() === currentName) return;
+
+  btn.disabled    = true;
+  btn.textContent = "…";
+  try {
+    const res  = await fetch(`/api/project/${id}/rename?key=julisunkan`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ name: newName.trim() })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Rename failed");
+
+    // Update the card title immediately
+    if (nameEl) nameEl.textContent = data.name;
+    notify("Audiobook renamed.", "success");
+  } catch (err) {
+    notify(err.message, "error");
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = "✏️";
+  }
 }
 
 // ── Admin: delete a project ────────────────────────────────────

@@ -243,6 +243,27 @@ def api_delete_project(project_id):
     return jsonify({"ok": True})
 
 
+@app.route("/api/project/<project_id>/rename", methods=["POST"])
+def api_rename_project(project_id):
+    """Admin-only: rename a project."""
+    if request.args.get("key") != ADMIN_KEY:
+        abort(403)
+    data = request.get_json(silent=True) or {}
+    new_name = (data.get("name") or "").strip()
+    if not new_name:
+        return jsonify({"error": "Name cannot be empty"}), 400
+    if len(new_name) > 200:
+        return jsonify({"error": "Name too long"}), 400
+    project = get_project(project_id)
+    if not project:
+        return jsonify({"error": "Not found"}), 404
+    conn = get_db()
+    conn.execute("UPDATE projects SET name=? WHERE id=?", (new_name, project_id))
+    conn.commit()
+    conn.close()
+    return jsonify({"ok": True, "name": new_name})
+
+
 @app.route("/api/export-zip")
 def api_export_zip():
     """Build a ZIP of all completed audiobooks and stream it."""
