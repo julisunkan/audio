@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>You're Offline — Texts to Audiobooks</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:     #0f1117;
+      --surface:#1a1d27;
+      --border: #2e3248;
+      --accent: #a78bfa;
+      --primary:#7c3aed;
+      --muted:  #94a3b8;
+      --text:   #e2e8f0;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .icon-wrap {
+      position: relative;
+      width: 110px;
+      height: 110px;
+      margin: 0 auto 28px;
+    }
+    .icon-wrap svg.headphones {
+      width: 110px;
+      height: 110px;
+      filter: drop-shadow(0 0 18px rgba(167,139,250,.35));
+    }
+    .icon-wrap .slash {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-wrap .slash::after {
+      content: '';
+      display: block;
+      width: 4px;
+      height: 120px;
+      background: linear-gradient(180deg, #ef4444 0%, #f97316 100%);
+      border-radius: 4px;
+      transform: rotate(45deg);
+      opacity: .85;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    p {
+      color: var(--muted);
+      font-size: .95rem;
+      line-height: 1.65;
+      max-width: 340px;
+      margin: 0 auto 28px;
+    }
+
+    .wave {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 32px;
+      margin: 0 auto 32px;
+      justify-content: center;
+    }
+    .wave span {
+      display: block;
+      width: 5px;
+      border-radius: 3px;
+      background: var(--primary);
+      opacity: .35;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 24px;
+      border-radius: 10px;
+      border: none;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity .2s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      margin-left: 10px;
+    }
+
+    .status {
+      margin-top: 28px;
+      font-size: .78rem;
+      color: var(--muted);
+    }
+    .status span { color: #ef4444; font-weight: 600; }
+    .status.online span { color: #10b981; }
+  </style>
+</head>
+<body>
+
+  <div class="icon-wrap">
+    <svg class="headphones" viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="55" cy="55" r="54" stroke="#2e3248" stroke-width="1.5"/>
+      <path d="M25 58 C25 36 85 36 85 58" stroke="#a78bfa" stroke-width="7" stroke-linecap="round" fill="none"/>
+      <rect x="17" y="56" width="14" height="22" rx="6" fill="#7c3aed"/>
+      <rect x="79" y="56" width="14" height="22" rx="6" fill="#7c3aed"/>
+    </svg>
+    <div class="slash"></div>
+  </div>
+
+  <h1>You're Offline</h1>
+  <p>It looks like you've lost your internet connection. Reconnect to keep creating audiobooks.</p>
+
+  <div class="wave" aria-hidden="true">
+    <span style="height:8px"></span>
+    <span style="height:14px"></span>
+    <span style="height:22px"></span>
+    <span style="height:28px"></span>
+    <span style="height:22px"></span>
+    <span style="height:14px"></span>
+    <span style="height:8px"></span>
+  </div>
+
+  <div>
+    <button class="btn btn-primary" onclick="tryReload()">↻ Try Again</button>
+    <a href="/" class="btn btn-secondary">Go Home</a>
+  </div>
+
+  <div class="status" id="status-line">
+    Connection status: <span id="status-word">Offline</span>
+  </div>
+
+  <script>
+    function tryReload() {
+      window.location.reload();
+    }
+
+    function updateStatus() {
+      const online = navigator.onLine;
+      const line   = document.getElementById("status-line");
+      const word   = document.getElementById("status-word");
+      word.textContent = online ? "Online" : "Offline";
+      line.className   = "status" + (online ? " online" : "");
+      if (online) {
+        setTimeout(() => window.location.reload(), 800);
+      }
+    }
+
+    window.addEventListener("online",  updateStatus);
+    window.addEventListener("offline", updateStatus);
+    updateStatus();
+  </script>
+</body>
+</html>
