@@ -6,3 +6,10 @@ pydub==0.25.1
 gTTS==2.5.3
 aiofiles==24.1.0
 gTTS
+aiofiles
+flask
+groq
+gTTS
+pydub
+pypdf
+python-docx

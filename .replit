@@ -28,7 +28,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python3 -m gunicorn --bind 0.0.0.0:5000 --reuse-port --reload app:app"
+args = "python main.py"
 waitForPort = 5000
 
 [[ports]]
