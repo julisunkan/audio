@@ -1,0 +1,109 @@
+Build a full-stack web application called "Texts to Audiobooks Creator" using Python (Flask), SQLite, HTML, CSS, and JavaScript.
+
+CORE FEATURES:
+
+* Users can paste text or upload files (.txt, .pdf, .docx)
+* Extract text from uploaded files
+* Convert text into audiobook (audio file)
+* Allow users to select from at least 10 sample voices (male/female, different accents)
+* Allow users to upload a sample voice file (store only; cloning optional placeholder)
+* Provide a "Preview Voice" feature (generate short audio sample before full conversion)
+
+AI + PROCESSING:
+
+* Integrate Groq API for text cleaning and formatting before narration
+* If text is large (>5000 chars), skip AI cleaning to save resources
+* Split text into smart chunks (~800 characters, sentence-aware)
+* Process chunks asynchronously (background thread or queue)
+* Show progress percentage while generating audiobook
+
+AUDIO:
+
+* Use Coqui TTS (local) for audio generation
+* Merge all chunks into one MP3 file (compressed at 64kbps)
+* Optional: allow adding background music (only if user enables it)
+* Allow speed control (0.75x – 1.5x simulated)
+
+PROJECT SYSTEM:
+
+* Save each job as a "project" in SQLite
+* Fields: id, name, text, voice, status, progress, output_file, created_at
+* Create a dashboard page showing recent projects (limit 10, lazy load)
+* Each project should have:
+
+  * status (processing/completed)
+  * progress bar
+  * download button
+  * playback option
+
+PERFORMANCE OPTIMIZATION:
+
+* Cache generated audio using hash(text + voice) to avoid reprocessing
+* Load TTS model only once globally (singleton pattern)
+* Limit background workers to max 2 threads
+* Compress all audio outputs to MP3 (64kbps)
+* Use streaming (send_file) for downloads (no full memory load)
+* Skip unnecessary heavy processing by default (e.g., background music)
+
+FILE HANDLING:
+
+* Store uploads in /uploads
+* Store generated audio in /outputs
+* Automatically delete all uploaded/generated files after 3 days
+* Cleanup should run periodically (not every request)
+
+ADMIN PAGE:
+
+* Create hidden route: /julisunkan
+* No login system, but require a secret key in URL (?key=julisunkan)
+* Admin can input and save:
+
+  * Groq API key
+  * Optional HuggingFace API key
+* Store keys in SQLite
+
+UI/UX:
+
+* Use clean responsive design (basic CSS or Bootstrap)
+* DO NOT use alert popups
+* Use inline notification system (top banner or message box)
+* Include:
+
+  * Upload form
+  * Text input area
+  * Voice selection dropdown
+  * Progress display
+  * Notification area
+
+PWA SUPPORT:
+
+* Add manifest.json
+* Add service-worker.js for caching static assets
+* Enable installable app behavior
+* Cache CSS/JS for faster reloads
+
+EXTRA FEATURES:
+
+* Chapter detection (split by "Chapter X" or fallback chunking)
+* Style modes (storytelling, news, calm narration via prompt modification)
+* Shareable link: /listen/<project_id> to stream audio
+* Voice preview endpoint (short audio generation)
+* Server-side download endpoint
+
+STRUCTURE:
+
+* app.py (main Flask app)
+* utils/ (tts.py, groq.py, parser.py, audio.py)
+* templates/ (index.html, dashboard.html, admin.html)
+* static/ (CSS, JS, manifest, service worker)
+* uploads/ and outputs/ folders
+
+IMPORTANT:
+
+* Code must be modular and readable
+* Avoid unnecessary dependencies
+* Include comments explaining key parts
+* Ensure app runs directly in Replit environment
+
+OUTPUT:
+Generate the full working code for all files with proper structure.

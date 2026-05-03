@@ -1,0 +1,56 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "Q8lQlzeUKh7pQcDRNK4u7"
+uri = "file://static/legal/icon.png"
+type = "image"
+title = "legal risk checker icon"
+
+[[generated]]
+id = "7bKAo_bu7lF3i3iydD7qx"
+uri = "file://static/legal/icon-maskable.png"
+type = "image"
+title = "legal risk checker maskable icon"
+
+[[generated]]
+id = "YK92Wp3SZXIk2EQ4H7gY4"
+uri = "file://static/gen/icon.png"
+type = "image"
+title = "KDP generator icon"
+
+[[generated]]
+id = "KatTmljNXo41shq1VcERn"
+uri = "file://static/gen/icon-maskable.png"
+type = "image"
+title = "KDP generator maskable icon"
+
+[[generated]]
+id = "uqDoTB5AShypst9_VAicV"
+uri = "file://static/optimizer/icon.png"
+type = "image"
+title = "KDP optimizer icon"
+
+[[generated]]
+id = "TjKwzcI-dFdPRGj3dARC3"
+uri = "file://static/optimizer/icon-maskable.png"
+type = "image"
+title = "KDP optimizer maskable icon"
+
+[[generated]]
+id = "5o25m3Nv3y92vQZxV8s0e"
+uri = "file://static/bulk/icon.png"
+type = "image"
+title = "KDP bulk creator icon"
+
+[[generated]]
+id = "8MCQnujX6tTar1cOEOBCj"
+uri = "file://static/bulk/icon-maskable.png"
+type = "image"
+title = "KDP bulk creator maskable icon"
+
+[[generated]]
+id = "Jnr_vvFp7oLt4UbPSlGvT"
+uri = "file://static/finder/icon-maskable.png"
+type = "image"
+title = "KDP finder maskable icon"
