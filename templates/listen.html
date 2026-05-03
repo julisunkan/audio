@@ -2,60 +2,89 @@
 {% block title %}{{ project.name }} — Texts to Audiobooks Creator{% endblock %}
 {% block content %}
 <div class="container" data-project-id="{{ project.id }}">
-  <div style="margin-bottom:16px;">
-    <a href="/dashboard" style="color:var(--muted);font-size:.85rem;">← Back to Dashboard</a>
+
+  <div style="margin-bottom:18px;">
+    <a href="/dashboard" style="color:var(--muted);font-size:.85rem;display:inline-flex;align-items:center;gap:6px;
+       padding:6px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);
+       transition:background .2s,color .2s;"
+       onmouseover="this.style.color='var(--text)';this.style.background='var(--surface3)'"
+       onmouseout="this.style.color='var(--muted)';this.style.background='var(--surface2)'">
+      ← Back to Library
+    </a>
   </div>
 
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-      <div>
-        <div class="page-title" style="margin-bottom:4px;">{{ project.name }}</div>
-        <div style="font-size:.85rem;color:var(--muted);">
-          Voice: <strong>{{ project.voice }}</strong> &bull;
-          Style: <strong>{{ project.style }}</strong> &bull;
-          Speed: <strong>{{ project.speed }}x</strong>
+  <!-- Main card -->
+  <div class="card glow-blue">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:20px;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:1.6rem;font-weight:800;margin-bottom:6px;
+             background:linear-gradient(135deg,#e2e8f0,#94a3b8);
+             -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+             white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+          🎧 {{ project.name }}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;">
+          <span class="feature-pill pill-blue">🎤 {{ project.voice }}</span>
+          <span class="feature-pill pill-green">🎭 {{ project.style | capitalize }}</span>
+          <span class="feature-pill pill-lemon">🎚️ {{ project.speed }}x speed</span>
         </div>
       </div>
-      <span id="status-badge" class="badge badge-{{ project.status }}">{{ project.status }}</span>
+      <span id="status-badge" class="badge badge-{{ project.status }}" style="font-size:.75rem;">
+        {% if project.status == 'completed' %}✅{% elif project.status == 'processing' %}⚡{% elif project.status == 'queued' %}🕐{% else %}❌{% endif %}
+        {{ project.status }}
+      </span>
     </div>
 
     <!-- Progress -->
     {% if project.status in ['queued', 'processing'] %}
-    <div id="progress-section">
+    <div id="progress-section" style="margin-bottom:16px;">
       <div class="progress-wrap">
         <div class="progress-bar" id="progress-bar" style="width:{{ project.progress }}%"></div>
       </div>
-      <div class="progress-text" id="progress-text">{{ project.progress }}% complete — generating your audiobook…</div>
+      <div class="progress-text" id="progress-text">
+        ⚡ {{ project.progress }}% — generating your audiobook…
+      </div>
     </div>
     {% endif %}
 
     <!-- Error -->
     <div id="error-section" style="display:{% if project.status == 'failed' %}block{% else %}none{% endif %};">
-      <div style="background:rgba(239,68,68,.1);border:1px solid var(--error);border-radius:8px;padding:14px;color:var(--error);margin-top:12px;">
-        ⚠️ Generation failed: <span class="error-msg">{{ project.error_msg or 'Unknown error' }}</span>
+      <div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;
+           padding:16px;color:#fca5a5;margin-top:12px;display:flex;gap:12px;align-items:flex-start;">
+        <span style="font-size:1.4rem;flex-shrink:0;">⚠️</span>
+        <div>
+          <div style="font-weight:700;margin-bottom:4px;">Generation failed</div>
+          <div style="font-size:.85rem;opacity:.85;" class="error-msg">{{ project.error_msg or 'Unknown error' }}</div>
+          <p style="margin-top:10px;font-size:.8rem;color:var(--muted);">
+            Try creating a new audiobook. If the issue persists, check your Groq API key in the
+            <a href="/julisunkan?key=julisunkan" style="color:#60a5fa;">admin panel</a>.
+          </p>
+        </div>
       </div>
-      <p style="margin-top:10px;font-size:.85rem;color:var(--muted);">
-        Please try creating a new audiobook. If the issue persists, check your Groq API key in the
-        <a href="/julisunkan?key=julisunkan">admin panel</a>.
-      </p>
     </div>
 
     <!-- Player -->
     <div id="player-section" style="display:{% if project.status == 'completed' %}block{% else %}none{% endif %};">
       <div class="audio-player-wrap">
-        <audio controls preload="metadata" {% if project.status == 'completed' %}src="/stream/{{ project.id }}"{% endif %}>
+        <audio controls preload="metadata"
+          {% if project.status == 'completed' %}src="/stream/{{ project.id }}"{% endif %}>
           Your browser does not support the audio element.
         </audio>
       </div>
-      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
-        <a href="/download/{{ project.id }}" class="btn btn-success">⬇ Download MP3</a>
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+        <a href="/download/{{ project.id }}" class="btn btn-success">
+          📥 Download MP3
+        </a>
+        <a href="/dashboard" class="btn btn-secondary">
+          📚 Back to Library
+        </a>
       </div>
     </div>
   </div>
 
   <!-- Chapter Breakdown -->
   {% if project.chapters %}
-  <div class="card" id="chapter-panel">
+  <div class="card glow-green" id="chapter-panel">
     <div class="card-title">📑 Chapters</div>
     <div id="chapter-list" style="display:flex;flex-direction:column;gap:6px;"></div>
   </div>
@@ -64,7 +93,10 @@
   <!-- Text Preview -->
   <div class="card">
     <div class="card-title">📄 Source Text Preview</div>
-    <div style="background:var(--surface2);border-radius:8px;padding:16px;max-height:200px;overflow-y:auto;font-size:.875rem;line-height:1.7;color:var(--muted);white-space:pre-wrap;">{{ project.text[:1000] }}{% if project.text|length > 1000 %}…<br/><span style="color:var(--accent);font-size:.8rem;">[{{ project.text|length }} characters total]</span>{% endif %}</div>
+    <div style="background:var(--surface2);border-radius:10px;padding:18px;
+         max-height:220px;overflow-y:auto;font-size:.875rem;line-height:1.75;
+         color:var(--muted);white-space:pre-wrap;border:1px solid var(--border);">{{ project.text[:1000] }}{% if project.text|length > 1000 %}…
+<span style="color:#60a5fa;font-size:.8rem;">[ {{ project.text|length }} characters total ]</span>{% endif %}</div>
   </div>
 </div>
 
@@ -79,36 +111,39 @@
   }
 
   function fmtTime(s) {
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
+    const h   = Math.floor(s / 3600);
+    const m   = Math.floor((s % 3600) / 60);
     const sec = Math.floor(s % 60);
     if (h > 0) return `${h}:${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
     return `${m}:${String(sec).padStart(2,"0")}`;
   }
 
-  const audio = document.querySelector("audio");
+  const audio  = document.querySelector("audio");
   const listEl = document.getElementById("chapter-list");
 
   function renderChapters(activeSec) {
     listEl.innerHTML = "";
     chaptersData.forEach((ch, idx) => {
       const nextStart = idx + 1 < chaptersData.length ? chaptersData[idx + 1].start_s : Infinity;
-      const isActive = activeSec !== null && activeSec >= ch.start_s && activeSec < nextStart;
-      const row = document.createElement("button");
-      row.style.cssText = `display:flex;align-items:center;gap:14px;width:100%;text-align:left;
-        padding:10px 14px;border-radius:8px;border:none;cursor:pointer;transition:background .15s;
-        background:${isActive ? "rgba(139,92,246,.18)" : "var(--surface2)"};
-        color:${isActive ? "var(--accent)" : "var(--text)"};`;
+      const isActive  = activeSec !== null && activeSec >= ch.start_s && activeSec < nextStart;
+      const row       = document.createElement("button");
+      row.style.cssText = `
+        display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+        padding:11px 14px;border-radius:10px;border:1px solid transparent;cursor:pointer;
+        transition:background .15s,border-color .15s,box-shadow .15s;font-family:inherit;
+        background:${isActive ? "rgba(37,99,235,.15)" : "var(--surface2)"};
+        color:${isActive ? "#93c5fd" : "var(--text)"};
+        border-color:${isActive ? "rgba(37,99,235,.35)" : "transparent"};
+        box-shadow:${isActive ? "0 0 12px rgba(37,99,235,.2)" : "none"};
+      `;
       row.innerHTML = `
-        <span style="font-size:.75rem;font-variant-numeric:tabular-nums;min-width:38px;
-          color:${isActive ? "var(--accent)" : "var(--muted)"};">${fmtTime(ch.start_s)}</span>
-        <span style="flex:1;font-size:.9rem;font-weight:${isActive ? 600 : 400};">${ch.title}</span>
-        ${isActive ? '<span style="font-size:.7rem;color:var(--accent);white-space:nowrap;">▶ playing</span>' : ""}`;
+        <span style="font-size:.72rem;font-variant-numeric:tabular-nums;min-width:40px;
+          color:${isActive ? "#60a5fa" : "var(--muted)"};">${fmtTime(ch.start_s)}</span>
+        <span style="flex:1;font-size:.9rem;font-weight:${isActive ? 700 : 500};">${ch.title}</span>
+        ${isActive ? '<span style="font-size:.68rem;color:#34d399;white-space:nowrap;font-weight:700;">▶ playing</span>' : ""}
+      `;
       row.addEventListener("click", () => {
-        if (audio) {
-          audio.currentTime = ch.start_s;
-          audio.play();
-        }
+        if (audio) { audio.currentTime = ch.start_s; audio.play(); }
         renderChapters(ch.start_s);
       });
       listEl.appendChild(row);
@@ -116,11 +151,8 @@
   }
 
   renderChapters(null);
-
   if (audio) {
-    audio.addEventListener("timeupdate", () => {
-      renderChapters(audio.currentTime);
-    });
+    audio.addEventListener("timeupdate", () => renderChapters(audio.currentTime));
   }
 })();
 </script>

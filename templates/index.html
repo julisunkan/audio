@@ -2,131 +2,179 @@
 {% block title %}Create Audiobook — Texts to Audiobooks Creator{% endblock %}
 {% block content %}
 <div class="container">
-  <div class="page-title">🎙️ Create Your Audiobook</div>
-  <div class="page-subtitle">Paste text or upload a file — we'll turn it into a high-quality audiobook.</div>
+
+  <!-- Hero -->
+  <div style="text-align:center;margin-bottom:36px;padding:8px 0;">
+    <div style="font-size:3rem;margin-bottom:12px;filter:drop-shadow(0 0 20px rgba(96,165,250,.4));">🎧</div>
+    <h1 class="page-title" style="font-size:2.2rem;text-align:center;margin-bottom:10px;">
+      Create Your Audiobook
+    </h1>
+    <p class="page-subtitle" style="text-align:center;max-width:520px;margin:0 auto 24px;">
+      Paste text or upload a file — our AI turns it into a professional-quality audiobook in minutes.
+    </p>
+    <div class="feature-strip" style="justify-content:center;">
+      <span class="feature-pill pill-blue">🤖 AI Text Cleaning</span>
+      <span class="feature-pill pill-green">🌍 10 Voice Accents</span>
+      <span class="feature-pill pill-lemon">⚡ Chapter Detection</span>
+      <span class="feature-pill pill-red">📥 MP3 Download</span>
+    </div>
+  </div>
 
   <form id="create-form" enctype="multipart/form-data">
-    <!-- Step 1: Text Input -->
-    <div class="card">
-      <div class="card-title">📝 Step 1 — Your Text</div>
-      <div class="tabs">
-        <button type="button" class="tab-btn active" data-group="input" data-target="tab-paste">Paste Text</button>
-        <button type="button" class="tab-btn" data-group="input" data-target="tab-upload">Upload File</button>
+
+    <!-- ── Step 1: Text Input ── -->
+    <div class="card glow-blue">
+      <div class="card-title">
+        <span class="step-badge step-1">1</span>
+        📝 Your Text
       </div>
+      <div class="tabs">
+        <button type="button" class="tab-btn active" data-group="input" data-target="tab-paste">
+          ✏️ Paste Text
+        </button>
+        <button type="button" class="tab-btn" data-group="input" data-target="tab-upload">
+          📂 Upload File
+        </button>
+      </div>
+
       <div id="tab-paste" class="tab-panel active" data-group="input">
         <div class="form-group">
-          <label for="text-input">Your text (paste here)</label>
-          <textarea id="text-input" name="text" placeholder="Paste your story, article, or document here…"></textarea>
+          <label for="text-input">Your text</label>
+          <textarea id="text-input" name="text"
+            placeholder="Paste your story, article, novel chapter, or any document here…"
+            style="min-height:180px;"></textarea>
         </div>
       </div>
-      <div id="text-stats" style="display:none; margin-top:10px; padding:12px 16px; background:var(--surface2); border-radius:8px; border:1px solid var(--border);">
-        <div style="display:flex; gap:24px; flex-wrap:wrap; align-items:center;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:1.1rem;">📝</span>
-            <div>
-              <div style="font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;">Words</div>
-              <div style="font-weight:700; font-size:1.05rem;" id="stat-words">0</div>
-            </div>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:1.1rem;">🔤</span>
-            <div>
-              <div style="font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;">Characters</div>
-              <div style="font-weight:700; font-size:1.05rem;" id="stat-chars">0</div>
-            </div>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:1.1rem;">🎧</span>
-            <div>
-              <div style="font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;">Est. Duration</div>
-              <div style="font-weight:700; font-size:1.05rem;" id="stat-duration">—</div>
-            </div>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:1.1rem;">📑</span>
-            <div>
-              <div style="font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;">Chapters</div>
-              <div style="font-weight:700; font-size:1.05rem;" id="stat-chapters">—</div>
-            </div>
-          </div>
-        </div>
-      </div>
+
       <div id="tab-upload" class="tab-panel" data-group="input">
         <div class="drop-zone">
           <input type="file" name="file" accept=".txt,.pdf,.docx"/>
-          <div class="icon">📂</div>
-          <div>Drag &amp; drop or click to browse</div>
-          <div class="hint">Supported formats: .txt, .pdf, .docx — max 50 MB</div>
+          <span class="icon">📂</span>
+          <div style="font-weight:600;font-size:.95rem;">Drag &amp; drop or click to browse</div>
+          <div class="hint">✅ Supported: .txt &nbsp;|&nbsp; .pdf &nbsp;|&nbsp; .docx &nbsp;|&nbsp; Max 50 MB</div>
           <div class="selected-file"></div>
+        </div>
+      </div>
+
+      <!-- Text stats -->
+      <div id="text-stats" style="display:none;" class="stat-box">
+        <div class="stat-item">
+          <span style="font-size:1.2rem;">📝</span>
+          <div>
+            <div class="stat-label">Words</div>
+            <div class="stat-value stat-blue" id="stat-words">0</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <span style="font-size:1.2rem;">🔤</span>
+          <div>
+            <div class="stat-label">Characters</div>
+            <div class="stat-value stat-green" id="stat-chars">0</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <span style="font-size:1.2rem;">⏱️</span>
+          <div>
+            <div class="stat-label">Est. Duration</div>
+            <div class="stat-value stat-lemon" id="stat-duration">—</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <span style="font-size:1.2rem;">📑</span>
+          <div>
+            <div class="stat-label">Chapters</div>
+            <div class="stat-value stat-red" id="stat-chapters">—</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Step 2: Voice -->
-    <div class="card">
-      <div class="card-title">🎤 Step 2 — Choose a Voice</div>
+    <!-- ── Step 2: Voice ── -->
+    <div class="card glow-green">
+      <div class="card-title">
+        <span class="step-badge step-2">2</span>
+        🎤 Choose a Voice
+      </div>
       <input type="hidden" id="voice-input" name="voice" value="{{ voices[0] }}"/>
       <div class="voice-grid">
         {% set accents = {
-          "Emma (US Female)": "🇺🇸 US",
-          "Guy (US Male)": "🇺🇸 US",
-          "Aria (US Female)": "🇺🇸 US",
-          "Davis (US Male)": "🇺🇸 US",
-          "Jenny (US Female)": "🇺🇸 US",
-          "Sonia (UK Female)": "🇬🇧 UK",
-          "Ryan (UK Male)": "🇬🇧 UK",
-          "Natasha (AU Female)": "🇦🇺 AU",
-          "William (AU Male)": "🇦🇺 AU",
-          "Clara (CA Female)": "🇨🇦 CA"
+          "Emma (US Female)":    {"flag":"🇺🇸","region":"US","gender":"♀"},
+          "Guy (US Male)":       {"flag":"🇺🇸","region":"US","gender":"♂"},
+          "Aria (US Female)":    {"flag":"🇺🇸","region":"US","gender":"♀"},
+          "Davis (US Male)":     {"flag":"🇺🇸","region":"US","gender":"♂"},
+          "Jenny (US Female)":   {"flag":"🇺🇸","region":"US","gender":"♀"},
+          "Sonia (UK Female)":   {"flag":"🇬🇧","region":"UK","gender":"♀"},
+          "Ryan (UK Male)":      {"flag":"🇬🇧","region":"UK","gender":"♂"},
+          "Natasha (AU Female)": {"flag":"🇦🇺","region":"AU","gender":"♀"},
+          "William (AU Male)":   {"flag":"🇦🇺","region":"AU","gender":"♂"},
+          "Clara (CA Female)":   {"flag":"🇨🇦","region":"CA","gender":"♀"}
         } %}
         {% for v in voices %}
+        {% set info = accents.get(v, {"flag":"🌐","region":"EN","gender":"♀"}) %}
         <div class="voice-card" data-voice="{{ v }}">
+          <div style="font-size:1.4rem;margin-bottom:6px;">{{ info.flag }}</div>
           <div class="vname">{{ v.split("(")[0].strip() }}</div>
-          <div class="vtag">{{ accents.get(v, "") }} &bull; {{ "Female" if "Female" in v else "Male" }}</div>
+          <div class="vtag">{{ info.region }} &bull; {{ info.gender }} {{ "Female" if "Female" in v else "Male" }}</div>
           <button type="button" class="preview-btn" data-voice="{{ v }}">▶ Preview</button>
         </div>
         {% endfor %}
       </div>
-
     </div>
 
-    <!-- Step 3: Options -->
-    <div class="card">
-      <div class="card-title">⚙️ Step 3 — Options</div>
+    <!-- ── Step 3: Options ── -->
+    <div class="card glow-lemon">
+      <div class="card-title">
+        <span class="step-badge step-3">3</span>
+        ⚙️ Options
+      </div>
       <div class="form-row">
         <div class="form-group">
-          <label for="name-input">Audiobook Name</label>
+          <label for="name-input">📖 Audiobook Name</label>
           <input type="text" id="name-input" name="name" placeholder="My Audiobook"/>
         </div>
         <div class="form-group">
-          <label for="style-select">Narration Style</label>
+          <label for="style-select">🎭 Narration Style</label>
           <select id="style-select" name="style">
-            <option value="storytelling">📖 Storytelling</option>
-            <option value="news">📰 News / Professional</option>
-            <option value="calm">🌿 Calm / Meditative</option>
+            <option value="storytelling">📖 Storytelling — warm &amp; narrative</option>
+            <option value="news">📰 News — crisp &amp; professional</option>
+            <option value="calm">🌿 Calm — slow &amp; meditative</option>
           </select>
         </div>
       </div>
       <div class="form-group">
-        <label>Playback Speed: <span id="speed-label">1.00x</span></label>
+        <label style="display:flex;align-items:center;justify-content:space-between;">
+          <span>🎚️ Playback Speed</span>
+          <span class="speed-display" id="speed-label">1.00x</span>
+        </label>
         <input type="range" id="speed-slider" name="speed" min="0.75" max="1.5" step="0.05" value="1.0"/>
-        <div class="range-labels"><span>0.75x (Slow)</span><span>1.0x (Normal)</span><span>1.5x (Fast)</span></div>
+        <div class="range-labels">
+          <span>🐢 0.75x Slow</span>
+          <span>🎯 1.0x Normal</span>
+          <span>🚀 1.5x Fast</span>
+        </div>
       </div>
     </div>
 
-    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;">
-      🎙️ Create Audiobook
+    <!-- ── CTA ── -->
+    <button type="submit" class="btn btn-cta btn-lg" style="width:100%;margin-bottom:20px;">
+      🎙️ Generate Audiobook
     </button>
   </form>
 
-  <!-- Voice sample upload lives OUTSIDE the main form to avoid nesting -->
-  <div class="card" style="margin-top:20px;">
-    <div class="card-title" style="font-size:.85rem; color: var(--muted); margin-bottom:10px;">📁 Upload Your Own Voice Sample (optional)</div>
-    <div id="voice-sample-form" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-      <input type="file" id="voice-sample-file" accept=".mp3,.wav,.ogg,.m4a" style="flex:1;min-width:200px;"/>
-      <button type="button" class="btn btn-secondary btn-sm" id="voice-sample-btn">Upload Sample</button>
+  <!-- Voice sample card -->
+  <div class="card" style="border-style:dashed;border-color:var(--border-h);">
+    <div class="card-title" style="font-size:.875rem;color:var(--muted);margin-bottom:12px;">
+      🎵 Upload Your Own Voice Sample
+      <span style="font-size:.7rem;background:rgba(37,99,235,.15);color:#93c5fd;border-radius:999px;padding:2px 8px;font-weight:700;">COMING SOON</span>
     </div>
-    <p style="font-size:.75rem;color:var(--muted);margin-top:6px;">Voice cloning is a future feature. Your sample will be stored for future use.</p>
+    <div id="voice-sample-form" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <input type="file" id="voice-sample-file" accept=".mp3,.wav,.ogg,.m4a"
+        style="flex:1;min-width:200px;font-size:.8rem;"/>
+      <button type="button" class="btn btn-ghost btn-sm" id="voice-sample-btn">⬆️ Upload Sample</button>
+    </div>
+    <p style="font-size:.75rem;color:var(--muted);margin-top:8px;">
+      Voice cloning is coming soon. Your sample will be stored securely for future use. 🔒
+    </p>
   </div>
 </div>
 {% endblock %}

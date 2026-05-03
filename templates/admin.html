@@ -1,60 +1,92 @@
 {% extends "base.html" %}
-{% block title %}Admin — Texts to Audiobooks Creator{% endblock %}
+{% block title %}Admin Panel — Texts to Audiobooks Creator{% endblock %}
 {% block content %}
-<div class="container" style="max-width:600px;">
-  <div class="page-title">🔧 Admin Panel</div>
-  <div class="page-subtitle">Manage API keys and configuration. This page is hidden.</div>
+<div class="container" style="max-width:680px;">
+
+  <!-- Header -->
+  <div style="text-align:center;margin-bottom:32px;">
+    <div style="font-size:2.8rem;margin-bottom:10px;filter:drop-shadow(0 0 16px rgba(234,179,8,.4));">🔧</div>
+    <h1 class="page-title" style="text-align:center;margin-bottom:6px;">Admin Panel</h1>
+    <p class="page-subtitle" style="text-align:center;margin-bottom:0;">Secret configuration panel — keep this URL private.</p>
+  </div>
 
   {% if message %}
-  <div style="background:rgba(16,185,129,.12);border:1px solid var(--success);border-radius:8px;padding:14px;color:var(--success);margin-bottom:20px;">
+  <div style="background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.35);border-radius:12px;
+       padding:14px 18px;color:#34d399;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-weight:600;">
     ✅ {{ message }}
   </div>
   {% endif %}
 
-  <div class="card">
+  <!-- API Keys -->
+  <div class="card glow-lemon">
     <div class="card-title">🔑 API Keys</div>
 
-    <div class="key-status">
-      <div class="dot {% if groq_key_set %}dot-green{% else %}dot-red{% endif %}"></div>
-      Groq API Key: <strong>{% if groq_key_set %}Configured{% else %}Not set{% endif %}</strong>
-    </div>
-    <div class="key-status">
-      <div class="dot {% if hf_key_set %}dot-green{% else %}dot-red{% endif %}"></div>
-      HuggingFace API Key: <strong>{% if hf_key_set %}Configured{% else %}Not set (optional){% endif %}</strong>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+      <div class="key-status">
+        <div class="dot {% if groq_key_set %}dot-green{% else %}dot-red{% endif %}"></div>
+        <span>Groq API Key</span>
+        <span style="margin-left:auto;">
+          {% if groq_key_set %}
+          <span class="feature-pill pill-green" style="font-size:.72rem;">✅ Configured</span>
+          {% else %}
+          <span class="feature-pill pill-red" style="font-size:.72rem;">❌ Not set</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="key-status">
+        <div class="dot {% if hf_key_set %}dot-green{% else %}dot-red{% endif %}"></div>
+        <span>HuggingFace API Key</span>
+        <span style="margin-left:auto;">
+          {% if hf_key_set %}
+          <span class="feature-pill pill-green" style="font-size:.72rem;">✅ Configured</span>
+          {% else %}
+          <span class="feature-pill pill-lemon" style="font-size:.72rem;">⚠️ Optional</span>
+          {% endif %}
+        </span>
+      </div>
     </div>
 
-    <hr class="divider"/>
+    <hr class="divider-grad"/>
 
     <form method="POST" action="/julisunkan?key={{ admin_key }}">
       <div class="form-group">
-        <label for="groq_api_key">Groq API Key</label>
-        <input type="password" id="groq_api_key" name="groq_api_key"
-               placeholder="{% if groq_key_set %}••••••••••••• (leave blank to keep current){% else %}gsk_…{% endif %}"/>
-        <p style="font-size:.75rem;color:var(--muted);margin-top:4px;">
-          Get your free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a>.
-          Used for AI text cleaning before narration.
+        <label for="groq_api_key">🤖 Groq API Key</label>
+        <input type="password" id="groq_api_key" name="groq_api_key" autocomplete="new-password"
+               placeholder="{% if groq_key_set %}••••••••••••• (leave blank to keep){% else %}gsk_…{% endif %}"/>
+        <p style="font-size:.75rem;color:var(--muted);margin-top:6px;">
+          Get your free key at <a href="https://console.groq.com" target="_blank" style="color:#60a5fa;">console.groq.com</a> — used for AI text cleaning before narration.
         </p>
       </div>
       <div class="form-group">
-        <label for="hf_api_key">HuggingFace API Key (optional)</label>
-        <input type="password" id="hf_api_key" name="hf_api_key"
-               placeholder="{% if hf_key_set %}••••••••••••• (leave blank to keep current){% else %}hf_…{% endif %}"/>
-        <p style="font-size:.75rem;color:var(--muted);margin-top:4px;">
-          Reserved for future model integrations.
-        </p>
+        <label for="hf_api_key">🤗 HuggingFace API Key <span style="font-weight:400;text-transform:none;color:var(--muted);">(optional)</span></label>
+        <input type="password" id="hf_api_key" name="hf_api_key" autocomplete="new-password"
+               placeholder="{% if hf_key_set %}••••••••••••• (leave blank to keep){% else %}hf_…{% endif %}"/>
+        <p style="font-size:.75rem;color:var(--muted);margin-top:6px;">Reserved for future model integrations.</p>
       </div>
-      <button type="submit" class="btn btn-primary">Save Settings</button>
+      <button type="submit" class="btn btn-warning" style="color:#000;">💾 Save Settings</button>
     </form>
   </div>
 
+  <!-- System Info -->
   <div class="card">
-    <div class="card-title">ℹ️ System Info</div>
-    <div style="font-size:.85rem;color:var(--muted);line-height:1.9;">
-      <div>TTS Engine: <strong style="color:var(--text);">gTTS (Google Text-to-Speech)</strong></div>
-      <div>AI Cleaning: <strong style="color:var(--text);">Groq llama-3.3-70b-versatile</strong></div>
-      <div>Audio Format: <strong style="color:var(--text);">MP3 @ 64kbps</strong></div>
-      <div>Background Workers: <strong style="color:var(--text);">Max 2 threads</strong></div>
-      <div>File Retention: <strong style="color:var(--text);">3 days auto-delete</strong></div>
+    <div class="card-title">📊 System Info</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;border:1px solid var(--border);">
+        <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:6px;">🔊 TTS Engine</div>
+        <div style="font-weight:700;color:#60a5fa;font-size:.9rem;">gTTS (Google)</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;border:1px solid var(--border);">
+        <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:6px;">🤖 AI Model</div>
+        <div style="font-weight:700;color:#34d399;font-size:.9rem;">Llama 3.3-70b</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;border:1px solid var(--border);">
+        <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:6px;">🎵 Audio Format</div>
+        <div style="font-weight:700;color:#fbbf24;font-size:.9rem;">MP3 @ 64 kbps</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;border:1px solid var(--border);">
+        <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:6px;">🗑️ File Retention</div>
+        <div style="font-weight:700;color:#f87171;font-size:.9rem;">3-day auto-delete</div>
+      </div>
     </div>
   </div>
 

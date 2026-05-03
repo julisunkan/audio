@@ -1,50 +1,60 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — Texts to Audiobooks Creator{% endblock %}
+{% block title %}Library — Texts to Audiobooks Creator{% endblock %}
 {% block content %}
 <div class="container" data-admin="{{ 'true' if is_admin else 'false' }}">
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
-    <div class="page-title" style="margin-bottom:0;">📚 My Audiobooks</div>
-    <button id="export-zip-btn" class="btn btn-secondary" style="display:none;" onclick="exportAllZip()">
-      📦 Download All as ZIP
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+    <div>
+      <h1 class="page-title" style="margin-bottom:4px;">📚 My Audiobook Library</h1>
+      <p class="page-subtitle" style="margin-bottom:0;">Your recent projects — play, download, or manage them here.</p>
+    </div>
+    <button id="export-zip-btn" class="btn btn-success" style="display:none;" onclick="exportAllZip()">
+      📦 Export All as ZIP
     </button>
   </div>
-  <div class="page-subtitle">Your recent audiobook projects. Click a project to view details or download.</div>
 
-  <!-- Search & Filter Bar -->
-  <div style="display:grid;grid-template-columns:1fr auto auto;gap:10px;margin-bottom:16px;flex-wrap:wrap;" id="filter-bar" class="filter-bar">
-    <input type="text" id="filter-search" placeholder="🔍  Search by name…" style="padding:9px 14px;"/>
-    <select id="filter-status" style="padding:9px 14px;min-width:140px;">
+  <hr class="divider-grad"/>
+
+  <!-- Filter Bar -->
+  <div style="display:grid;grid-template-columns:1fr auto auto;gap:10px;margin-bottom:14px;" id="filter-bar" class="filter-bar">
+    <input type="text" id="filter-search" placeholder="🔍  Search by name…"/>
+    <select id="filter-status">
       <option value="">All Statuses</option>
-      <option value="completed">Completed</option>
-      <option value="processing">Processing</option>
-      <option value="queued">Queued</option>
-      <option value="failed">Failed</option>
+      <option value="completed">✅ Completed</option>
+      <option value="processing">⚡ Processing</option>
+      <option value="queued">🕐 Queued</option>
+      <option value="failed">❌ Failed</option>
     </select>
-    <select id="filter-voice" style="padding:9px 14px;min-width:160px;">
+    <select id="filter-voice">
       <option value="">All Voices</option>
     </select>
   </div>
   <div id="filter-summary" style="font-size:.8rem;color:var(--muted);margin-bottom:12px;display:none;"></div>
 
-  <div id="export-progress" style="display:none;padding:14px;" class="card">
+  <!-- Export progress -->
+  <div id="export-progress" style="display:none;padding:16px;" class="card">
     <div style="display:flex;align-items:center;gap:12px;">
       <span class="spinner"></span>
-      <span id="export-progress-text" style="font-size:.9rem;color:var(--muted);">Preparing your ZIP file…</span>
+      <span id="export-progress-text" style="font-size:.9rem;color:var(--muted);">📦 Building your ZIP file…</span>
     </div>
   </div>
 
+  <!-- Project list -->
   <div id="project-list" class="project-list">
     <div style="text-align:center;padding:32px;color:var(--muted);">
-      <span class="spinner"></span> Loading projects…
+      <span class="spinner"></span>&nbsp; Loading your library…
     </div>
   </div>
 
   <div style="text-align:center;margin-top:20px;">
-    <button id="load-more" class="btn btn-secondary" style="display:none;">Load More</button>
+    <button id="load-more" class="btn btn-secondary" style="display:none;">⬇️ Load More</button>
   </div>
 
-  <div style="text-align:center;margin-top:32px;">
-    <a href="/" class="btn btn-primary">+ Create New Audiobook</a>
+  <hr class="divider-grad" style="margin-top:32px;"/>
+
+  <div style="text-align:center;margin-top:24px;">
+    <a href="/" class="btn btn-cta btn-lg">✨ Create New Audiobook</a>
   </div>
 </div>
 {% endblock %}
