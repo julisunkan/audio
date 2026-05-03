@@ -102,6 +102,60 @@ function initVoiceCards() {
   });
 }
 
+// ── Word Count & Duration Estimate ────────────────────────────
+const WPM_BASE = 140; // average narration words per minute at 1.0x
+
+function updateTextStats(text) {
+  const statsBox = document.getElementById("text-stats");
+  if (!statsBox) return;
+
+  const trimmed = text.trim();
+  if (!trimmed) {
+    statsBox.style.display = "none";
+    return;
+  }
+
+  const words = trimmed.split(/\s+/).filter(Boolean).length;
+  const chars = trimmed.length;
+  const speed = parseFloat(document.getElementById("speed-slider")?.value || 1.0);
+  const minutes = words / (WPM_BASE * speed);
+  const duration = formatDuration(minutes);
+
+  // Detect chapters by "Chapter X" pattern
+  const chapterMatches = trimmed.match(/chapter\s+\w+/gi);
+  const chapters = chapterMatches ? chapterMatches.length : "—";
+
+  document.getElementById("stat-words").textContent    = words.toLocaleString();
+  document.getElementById("stat-chars").textContent    = chars.toLocaleString();
+  document.getElementById("stat-duration").textContent = duration;
+  document.getElementById("stat-chapters").textContent = chapters;
+
+  statsBox.style.display = "block";
+}
+
+function formatDuration(minutes) {
+  if (minutes < 1) return `~${Math.round(minutes * 60)}s`;
+  const h = Math.floor(minutes / 60);
+  const m = Math.round(minutes % 60);
+  if (h > 0) return `~${h}h ${m}m`;
+  return `~${m} min`;
+}
+
+function initTextStats() {
+  const textarea = document.getElementById("text-input");
+  if (!textarea) return;
+
+  textarea.addEventListener("input", () => updateTextStats(textarea.value));
+
+  // Re-calculate when speed changes so duration updates live
+  const slider = document.getElementById("speed-slider");
+  if (slider) {
+    slider.addEventListener("input", () => {
+      if (textarea.value.trim()) updateTextStats(textarea.value);
+    });
+  }
+}
+
 // ── Speed Slider ───────────────────────────────────────────────
 function initSpeedSlider() {
   const slider = document.getElementById("speed-slider");
@@ -309,6 +363,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initDropZone();
   initVoiceCards();
   initSpeedSlider();
+  initTextStats();
   initCreateForm();
   initDashboard();
   initVoiceSampleUpload();
