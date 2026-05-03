@@ -397,6 +397,10 @@ function initDashboard() {
   statusEl?.addEventListener("change", renderFiltered);
   voiceEl?.addEventListener("change",  renderFiltered);
 
+  // Detect admin mode from the container's data attribute
+  const isAdmin = document.querySelector(".container")?.dataset.admin === "true";
+  const adminKey = "julisunkan";
+
   // ── Project card HTML ─────────────────────────────────────────
   function projectCard(p) {
     const date    = p.created_at ? p.created_at.split("T")[0] : "";
@@ -407,6 +411,11 @@ function initDashboard() {
       ? `<a href="/listen/${p.id}" class="btn btn-sm btn-secondary">View Progress</a>`
       : `<a href="/listen/${p.id}" class="btn btn-sm btn-secondary">Details</a>`;
 
+    const deleteBtn = isAdmin
+      ? `<button class="btn btn-sm" style="background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3);"
+           onclick="deleteProject('${p.id}', this)" title="Delete project">🗑</button>`
+      : "";
+
     return `<div class="project-card" data-id="${p.id}" data-status="${p.status}">
       <div>
         <div class="project-name">${escHtml(p.name)}</div>
@@ -416,6 +425,7 @@ function initDashboard() {
       <div class="project-actions">
         <span class="badge badge-${p.status}">${p.status}</span>
         ${actions}
+        ${deleteBtn}
       </div>
     </div>`;
   }
@@ -452,6 +462,33 @@ function clearFilters() {
   if (v)  v.value  = "";
   // Trigger re-render via the status select's change event
   document.getElementById("filter-status")?.dispatchEvent(new Event("change"));
+}
+
+// ── Admin: delete a project ────────────────────────────────────
+async function deleteProject(id, btn) {
+  if (!confirm("Delete this audiobook permanently? This cannot be undone.")) return;
+  btn.disabled = true;
+  btn.textContent = "…";
+  try {
+    const res  = await fetch(`/api/project/${id}/delete?key=julisunkan`, { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Delete failed");
+    // Remove card from DOM and master list
+    const card = document.querySelector(`.project-card[data-id="${id}"]`);
+    if (card) card.remove();
+    // Remove from in-memory store
+    const dashFn = window._dashboardAllProjects;
+    if (Array.isArray(dashFn)) {
+      const idx = dashFn.findIndex(p => p.id === id);
+      if (idx !== -1) dashFn.splice(idx, 1);
+    }
+    notify("Audiobook deleted.", "success");
+    initExportButton();
+  } catch (err) {
+    notify(err.message, "error");
+    btn.disabled = false;
+    btn.textContent = "🗑";
+  }
 }
 
 function escHtml(str) {

@@ -139,7 +139,8 @@ def index():
 
 @app.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html")
+    is_admin = request.args.get("key") == ADMIN_KEY
+    return render_template("dashboard.html", is_admin=is_admin)
 
 
 @app.route("/listen/<project_id>")
@@ -218,6 +219,28 @@ def api_create():
     executor.submit(_run_job, project_id)
 
     return jsonify({"project_id": project_id, "status": "queued"})
+
+
+@app.route("/api/project/<project_id>/delete", methods=["POST"])
+def api_delete_project(project_id):
+    """Admin-only: delete a project record and its output file."""
+    if request.args.get("key") != ADMIN_KEY:
+        abort(403)
+    project = get_project(project_id)
+    if not project:
+        return jsonify({"error": "Not found"}), 404
+    # Remove audio file if it exists
+    if project.get("output_file"):
+        path = os.path.join(OUTPUT_DIR, project["output_file"])
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+    conn = get_db()
+    conn.execute("DELETE FROM projects WHERE id=?", (project_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"ok": True})
 
 
 @app.route("/api/export-zip")

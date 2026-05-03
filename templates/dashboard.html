@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Dashboard — Texts to Audiobooks Creator{% endblock %}
 {% block content %}
-<div class="container">
+<div class="container" data-admin="{{ 'true' if is_admin else 'false' }}">
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
     <div class="page-title" style="margin-bottom:0;">📚 My Audiobooks</div>
     <button id="export-zip-btn" class="btn btn-secondary" style="display:none;" onclick="exportAllZip()">
