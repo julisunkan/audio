@@ -399,7 +399,6 @@ function initDashboard() {
 
   // Detect admin mode from the container's data attribute
   const isAdmin = document.querySelector(".container")?.dataset.admin === "true";
-  const adminKey = "julisunkan";
 
   // ── Project card HTML ─────────────────────────────────────────
   function projectCard(p) {
@@ -510,15 +509,9 @@ async function deleteProject(id, btn) {
     const res  = await fetch(`/api/project/${id}/delete?key=julisunkan`, { method: "POST" });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Delete failed");
-    // Remove card from DOM and master list
+    // Remove card from DOM
     const card = document.querySelector(`.project-card[data-id="${id}"]`);
     if (card) card.remove();
-    // Remove from in-memory store
-    const dashFn = window._dashboardAllProjects;
-    if (Array.isArray(dashFn)) {
-      const idx = dashFn.findIndex(p => p.id === id);
-      if (idx !== -1) dashFn.splice(idx, 1);
-    }
     notify("Audiobook deleted.", "success");
     initExportButton();
   } catch (err) {
@@ -527,6 +520,8 @@ async function deleteProject(id, btn) {
     btn.textContent = "🗑";
   }
 }
+
+
 
 function escHtml(str) {
   return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -579,7 +574,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initDashboard();
   initVoiceSampleUpload();
 
-  // Listen page polling
-  const pid = document.body.dataset.projectId;
+  // Listen page polling — read project-id from the container div
+  const pid = document.querySelector("[data-project-id]")?.dataset.projectId;
   if (pid) initProjectPoll(pid);
 });
